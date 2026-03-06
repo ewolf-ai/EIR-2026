@@ -177,12 +177,12 @@ export default function PreferencesManager() {
   if (!dbUser) return null;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 overflow-hidden">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg sm:text-xl font-bold text-nursing-700 flex items-center gap-1 sm:gap-2">
-          <span className="text-xl sm:text-2xl">🎯</span>
-          <span className="hidden sm:inline">Gestionar Preferencias</span>
-          <span className="sm:hidden">Preferencias</span>
+        <h3 className="text-lg sm:text-xl font-bold text-nursing-700 flex items-center gap-1 sm:gap-2 min-w-0">
+          <span className="text-xl sm:text-2xl flex-shrink-0">🎯</span>
+          <span className="hidden sm:inline truncate">Gestionar Preferencias</span>
+          <span className="sm:hidden truncate">Preferencias</span>
         </h3>
         {!isAdding && (
           <button

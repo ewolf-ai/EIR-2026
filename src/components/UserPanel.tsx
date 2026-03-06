@@ -73,9 +73,9 @@ export default function UserPanel() {
   if (!dbUser) return null;
 
   return (
-    <div className="bg-gradient-to-br from-pastel-pink to-pastel-lavender rounded-2xl shadow-xl p-4 sm:p-6 mb-8">
+    <div className="bg-gradient-to-br from-pastel-pink to-pastel-lavender rounded-2xl shadow-xl p-4 sm:p-6 mb-8 overflow-hidden">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto min-w-0">
           {dbUser.photo_url && (
             <Image
               src={dbUser.photo_url}
@@ -96,7 +96,7 @@ export default function UserPanel() {
 
       <div className="grid gap-4 sm:gap-6">
         {/* Position Section */}
-        <div className="bg-white bg-opacity-60 rounded-xl p-4">
+        <div className="bg-white bg-opacity-60 rounded-xl p-4 overflow-hidden">
           <h3 className="font-semibold text-nursing-700 mb-3 flex items-center gap-2">
             <span className="text-xl sm:text-2xl">📊</span>
             <span className="text-sm sm:text-base">Número de Plaza</span>
@@ -150,7 +150,7 @@ export default function UserPanel() {
         </div>
 
         {/* Preferences Section */}
-        <div className="bg-white bg-opacity-60 rounded-xl p-4">
+        <div className="bg-white bg-opacity-60 rounded-xl p-4 overflow-hidden">
           <h3 className="font-semibold text-nursing-700 mb-3 flex items-center gap-2">
             <span className="text-xl sm:text-2xl">❤️</span>
             <span className="text-sm sm:text-base">Mis Preferencias</span>
@@ -159,9 +159,9 @@ export default function UserPanel() {
           {preferences.length > 0 ? (
             <div className="space-y-2">
               {preferences.slice(0, 3).map((pref, idx) => (
-                <div key={pref.id} className="flex items-start gap-2 bg-white bg-opacity-40 rounded p-2">
+                <div key={pref.id} className="flex items-start gap-2 bg-white bg-opacity-40 rounded p-2 overflow-hidden">
                   <span className="text-nursing-500 font-bold flex-shrink-0">{idx + 1}.</span>
-                  <span className="text-sm text-gray-700 flex-1 break-words">{pref.preference_value}</span>
+                  <span className="text-sm text-gray-700 flex-1 break-words min-w-0">{pref.preference_value}</span>
                   <span className="text-xs text-gray-500 flex-shrink-0">
                     ({pref.preference_type === 'hospital' ? 'hosp' : pref.preference_type === 'province' ? 'prov' : 'com'})
                   </span>
@@ -181,28 +181,28 @@ export default function UserPanel() {
 
       {/* Comparison Analysis */}
       {comparison && dbUser.eir_position && preferences.length > 0 && (
-        <div className="mt-4 sm:mt-6 bg-white bg-opacity-60 rounded-xl p-4">
+        <div className="mt-4 sm:mt-6 bg-white bg-opacity-60 rounded-xl p-4 overflow-hidden">
           <h3 className="font-semibold text-nursing-700 mb-4 flex items-center gap-2">
             <span className="text-xl sm:text-2xl">📈</span>
             <span className="text-sm sm:text-base">Análisis Comparativo</span>
           </h3>
           
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3">
+            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 overflow-hidden">
               <p className="text-xl sm:text-2xl font-bold text-nursing-600">{comparison.totalUsers}</p>
-              <p className="text-xs text-gray-600 mt-1">Usuarios totales</p>
+              <p className="text-xs text-gray-600 mt-1 break-words">Usuarios totales</p>
             </div>
-            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3">
+            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 overflow-hidden">
               <p className="text-xl sm:text-2xl font-bold text-green-600">{comparison.usersAhead}</p>
-              <p className="text-xs text-gray-600 mt-1">Por delante</p>
+              <p className="text-xs text-gray-600 mt-1 break-words">Por delante</p>
             </div>
-            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3">
+            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 overflow-hidden">
               <p className="text-xl sm:text-2xl font-bold text-blue-600">{comparison.usersBehind}</p>
-              <p className="text-xs text-gray-600 mt-1">Por detrás</p>
+              <p className="text-xs text-gray-600 mt-1 break-words">Por detrás</p>
             </div>
-            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 col-span-2 lg:col-span-1">
+            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 col-span-2 lg:col-span-1 overflow-hidden">
               <p className="text-xl sm:text-2xl font-bold text-orange-600">{comparison.competingForSamePreferences}</p>
-              <p className="text-xs text-gray-600 mt-1">Compitiendo por tus preferencias</p>
+              <p className="text-xs text-gray-600 mt-1 break-words">Compitiendo por tus preferencias</p>
             </div>
           </div>
         </div>

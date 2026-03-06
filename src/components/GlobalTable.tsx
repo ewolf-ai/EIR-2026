@@ -48,7 +48,7 @@ export default function GlobalTable() {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <h3 className="text-lg sm:text-xl font-bold text-nursing-700 flex items-center gap-2">
           <span className="text-2xl">👥</span>
@@ -136,8 +136,9 @@ export default function GlobalTable() {
       </div>
 
       {/* Vista desktop - Tabla */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full">
+      <div className="hidden md:block overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <table className="min-w-full">
           <thead className="bg-pastel-pink bg-opacity-40">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-semibold text-nursing-800">
@@ -209,6 +210,7 @@ export default function GlobalTable() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {data.length > 10 && (

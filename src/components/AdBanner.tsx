@@ -35,12 +35,14 @@ export default function AdBanner({ className = '' }: AdBannerProps) {
   }, []);
 
   return (
-    <div className={`flex justify-center items-center my-6 ${className}`}>
-      <div 
-        ref={adRef}
-        className="min-h-[300px] w-full max-w-2xl flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 p-4 shadow-sm"
-      >
-        {/* Ad will be inserted here */}
+    <div className={`w-full overflow-hidden my-6 ${className}`}>
+      <div className="flex justify-center items-center px-2">
+        <div 
+          ref={adRef}
+          className="min-h-[250px] w-full max-w-2xl flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 p-3 sm:p-4 shadow-sm overflow-hidden"
+        >
+          {/* Ad will be inserted here */}
+        </div>
       </div>
     </div>
   );

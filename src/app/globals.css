@@ -12,6 +12,16 @@
   --pastel-sage: #D5E8D4;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
 body {
   @apply bg-gradient-to-br from-pastel-blue via-pastel-mint to-pastel-lavender;
   min-height: 100vh;
