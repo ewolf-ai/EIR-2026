@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --nursing-primary: #e0559c;
+  --pastel-blue: #B4D4E1;
+  --pastel-pink: #F8D7DA;
+  --pastel-mint: #D1F2EB;
+  --pastel-lavender: #E8DAEF;
+  --pastel-peach: #FFE5CC;
+  --pastel-sage: #D5E8D4;
+}
+
+body {
+  @apply bg-gradient-to-br from-pastel-blue via-pastel-mint to-pastel-lavender;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Nursing themed background decorations */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23F8D7DA' opacity='0.05'/%3E%3Crect x='40' y='30' width='20' height='40' fill='%23B4D4E1' opacity='0.05'/%3E%3Crect x='30' y='40' width='40' height='20' fill='%23B4D4E1' opacity='0.05'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 10 L45 25 L60 25 L48 35 L53 50 L40 40 L27 50 L32 35 L20 25 L35 25 Z' fill='%23D1F2EB' opacity='0.04'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 25 L55 25 L40 35 L45 55 L30 42 L15 55 L20 35 L5 25 L25 25 Z' fill='%23E8DAEF' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 200px 200px, 150px 150px, 100px 100px;
+  background-position: 0 0, 50px 50px, 100px 100px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-pastel-blue bg-opacity-20;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-nursing-400 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-nursing-500;
+}
+
+/* Smooth transitions */
+* {
+  @apply transition-colors duration-150;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Button hover effects */
+button:not(:disabled):active {
+  transform: scale(0.98);
+}
