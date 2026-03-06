@@ -26,32 +26,52 @@ interface ComparisonData {
 // Tooltip component
 function InfoTooltip({ text }: { text: string }) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
 
-  const toggleTooltip = () => {
+  const handleMouseEnter = () => {
+    if (!isTouch) {
+      setShowTooltip(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isTouch) {
+      setShowTooltip(false);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsTouch(true);
     setShowTooltip(!showTooltip);
   };
 
+  const handleBackdropClick = () => {
+    setShowTooltip(false);
+    setTimeout(() => setIsTouch(false), 300);
+  };
+
   return (
-    <div className="relative inline-block">
+    <div 
+      className="relative inline-block"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <span
         className="inline-flex items-center justify-center w-5 h-5 sm:w-4 sm:h-4 text-xs text-gray-500 border border-gray-400 rounded-full cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors active:bg-gray-200"
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-        onClick={toggleTooltip}
-        onTouchStart={(e) => {
-          e.preventDefault();
-          toggleTooltip();
-        }}
+        onTouchStart={handleTouchStart}
       >
         i
       </span>
       {showTooltip && (
         <>
-          <div 
-            className="fixed inset-0 z-40"
-            onClick={() => setShowTooltip(false)}
-            onTouchStart={() => setShowTooltip(false)}
-          />
+          {isTouch && (
+            <div 
+              className="fixed inset-0 z-40"
+              onClick={handleBackdropClick}
+              onTouchStart={handleBackdropClick}
+            />
+          )}
           <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 sm:w-56 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg">
             <div className="relative">
               {text}
@@ -316,14 +336,14 @@ export default function UserPanel() {
                     </div>
                     <div className="bg-orange-50 rounded p-2 flex flex-col items-center text-center">
                       <div className="flex items-center gap-1 mb-1">
-                        <p className="text-xs text-gray-800 font-medium">1ª opción</p>
+                        <p className="text-xs text-gray-800 font-medium">Usuarios que la han elegido como 1ª opción</p>
                         <InfoTooltip text="Número de usuarios que han escogido esta plaza como primera opción y van por delante de ti en el ranking." />
                       </div>
                       <p className="text-2xl font-bold text-orange-700">{analysis.usersFirstOption}</p>
                     </div>
                     <div className="bg-purple-50 rounded p-2 flex flex-col items-center text-center">
                       <div className="flex items-center gap-1 mb-1">
-                        <p className="text-xs text-gray-800 font-medium">Top 3</p>
+                        <p className="text-xs text-gray-800 font-medium">Usuarios que la tienen en su top 3</p>
                         <InfoTooltip text="Número de usuarios que han escogido esta plaza dentro de sus tres primeras opciones y van por delante de ti en el ranking." />
                       </div>
                       <p className="text-2xl font-bold text-purple-700">{analysis.usersTop3}</p>
