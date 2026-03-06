@@ -246,7 +246,10 @@ export default function UserPanel() {
           {/* Assigned Position - Success */}
           {comparison.assignedPosition && (
             <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border-l-4 border-green-500">
-              <h4 className="font-semibold text-green-800 mb-1 text-sm">Tu plaza adjudicada (simulación):</h4>
+              <h4 className="font-semibold text-green-800 mb-1 text-sm flex items-center gap-2">
+                Tu plaza adjudicada (simulación):
+                <InfoTooltip text="Asignación realizada según posición y preferencias de los usuarios registrados. *Tus plazas preferidas pueden no estar disponibles si los usuarios con mejor posición que tú la han seleccionado y cubren todas las plazas ofertadas" />
+              </h4>
               <p className="text-sm text-green-700 font-medium break-words">{comparison.assignedPosition}</p>
             </div>
           )}
