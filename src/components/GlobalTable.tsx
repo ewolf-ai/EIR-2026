@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { supabase, User, Preference } from '@/lib/supabase';
+import { User, Preference } from '@/lib/supabase';
 
 interface UserWithPreferences {
   user: User;
@@ -18,30 +18,14 @@ export default function GlobalTable() {
     try {
       setLoading(true);
 
-      // Get all users with positions
-      const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('*')
-        .not('eir_position', 'is', null)
-        .order(sortBy === 'position' ? 'eir_position' : 'display_name', { ascending: true });
+      const response = await fetch(`/api/global?sortBy=${encodeURIComponent(sortBy)}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch global data');
+      }
 
-      if (usersError) throw usersError;
-
-      // Get all preferences
-      const { data: prefs, error: prefsError } = await supabase
-        .from('preferences')
-        .select('*')
-        .order('priority', { ascending: true });
-
-      if (prefsError) throw prefsError;
-
-      // Combine data
-      const combined = users?.map(user => ({
-        user,
-        preferences: prefs?.filter(p => p.user_id === user.id) || [],
-      })) || [];
-
-      setData(combined);
+      const { data: combined } = await response.json();
+      setData(combined || []);
     } catch (err) {
       console.error('Error loading global data:', err);
     } finally {

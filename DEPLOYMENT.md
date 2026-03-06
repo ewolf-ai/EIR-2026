@@ -30,9 +30,16 @@ Vercel es la plataforma creada por el equipo de Next.js y ofrece la mejor integr
      NEXT_PUBLIC_FIREBASE_APP_ID
      NEXT_PUBLIC_SUPABASE_URL
      NEXT_PUBLIC_SUPABASE_ANON_KEY
-     SUPABASE_SERVICE_ROLE_KEY
+     SUPABASE_SERVICE_ROLE_KEY ⚠️ IMPORTANTE (ver nota abajo)
      NEXT_PUBLIC_APP_URL (tu dominio de Vercel)
      ```
+   
+   **⚠️ IMPORTANTE - SUPABASE_SERVICE_ROLE_KEY:**
+   - Esta es la clave de administrador de Supabase que BYPASA Row Level Security
+   - Solo se usa en API Routes del servidor (nunca se expone al cliente)
+   - Obtenerla en: Supabase Dashboard → Settings → API → `service_role` key (secret)
+   - **NUNCA** la expongas en el código cliente ni la compartas
+   - Es necesaria porque usamos Firebase Auth en lugar de Supabase Auth
 
 4. **Configurar dominios autorizados en Firebase**
    - Ir a Firebase Console → Authentication → Settings

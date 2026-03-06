@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useAuthStore } from '@/lib/store';
 import { updateEIRPosition } from '@/lib/auth';
 import { validateEIRPosition } from '@/lib/security';
-import { supabase } from '@/lib/supabase';
 
 interface ComparisonData {
   totalUsers: number;
@@ -26,39 +25,17 @@ export default function UserPanel() {
     if (!dbUser?.eir_position || preferences.length === 0) return;
 
     try {
-      // Get total users
-      const { count: totalUsers } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .not('eir_position', 'is', null);
+      const preferenceValues = preferences.map(p => p.preference_value).join(',');
+      const response = await fetch(
+        `/api/comparison?user_id=${encodeURIComponent(dbUser.id)}&eir_position=${dbUser.eir_position}&preference_values=${encodeURIComponent(preferenceValues)}`
+      );
 
-      // Get users ahead
-      const { count: usersAhead } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .lt('eir_position', dbUser.eir_position)
-        .not('eir_position', 'is', null);
+      if (!response.ok) {
+        throw new Error('Failed to fetch comparison');
+      }
 
-      // Get users behind
-      const { count: usersBehind } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .gt('eir_position', dbUser.eir_position);
-
-      // Get users competing for same preferences
-      const preferenceValues = preferences.map(p => p.preference_value);
-      const { count: competing } = await supabase
-        .from('preferences')
-        .select('user_id', { count: 'exact', head: true })
-        .in('preference_value', preferenceValues)
-        .neq('user_id', dbUser.id);
-
-      setComparison({
-        totalUsers: totalUsers || 0,
-        usersAhead: usersAhead || 0,
-        usersBehind: usersBehind || 0,
-        competingForSamePreferences: competing || 0,
-      });
+      const { data } = await response.json();
+      setComparison(data);
     } catch (err) {
       console.error('Error loading comparison:', err);
     }
@@ -82,7 +59,7 @@ export default function UserPanel() {
     try {
       setLoading(true);
       setError('');
-      await updateEIRPosition(dbUser!.id, posNum);
+      await updateEIRPosition(dbUser!.firebase_uid, posNum);
       
       // Reload user data
       window.location.reload();

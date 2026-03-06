@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/lib/store';
-import { supabase, Preference } from '@/lib/supabase';
+import { Preference } from '@/lib/supabase';
 import { sanitizePreferenceValue, validatePreferenceType } from '@/lib/security';
 
 export default function PreferencesManager() {
@@ -16,31 +16,16 @@ export default function PreferencesManager() {
 
   const loadSuggestions = useCallback(async () => {
     try {
-      let query;
-      const searchTerm = `%${newPrefValue}%`;
-
-      if (newPrefType === 'hospital') {
-        const { data } = await supabase
-          .from('offered_positions')
-          .select('center')
-          .ilike('center', searchTerm)
-          .limit(5);
-        setSuggestions(Array.from(new Set(data?.map(d => d.center) || [])));
-      } else if (newPrefType === 'province') {
-        const { data } = await supabase
-          .from('offered_positions')
-          .select('province')
-          .ilike('province', searchTerm)
-          .limit(5);
-        setSuggestions(Array.from(new Set(data?.map(d => d.province) || [])));
-      } else {
-        const { data } = await supabase
-          .from('autonomous_communities')
-          .select('community')
-          .ilike('community', searchTerm)
-          .limit(5);
-        setSuggestions(Array.from(new Set(data?.map(d => d.community) || [])));
+      const response = await fetch(
+        `/api/search?type=${encodeURIComponent(newPrefType)}&search=${encodeURIComponent(newPrefValue)}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to load suggestions');
       }
+
+      const { data } = await response.json();
+      setSuggestions(data?.map((item: any) => item.value) || []);
     } catch (err) {
       console.error('Error loading suggestions:', err);
       setSuggestions([]);
@@ -68,20 +53,23 @@ export default function PreferencesManager() {
       setLoading(true);
       setError('');
 
-      const { data, error: insertError } = await supabase
-        .from('preferences')
-        .insert({
+      const response = await fetch('/api/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           user_id: dbUser.id,
           preference_type: newPrefType,
           preference_value: sanitizedValue,
           priority: nextPriority,
-        })
-        .select()
-        .single();
+        }),
+      });
 
-      if (insertError) throw insertError;
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to add preference');
+      }
 
-      setPreferences([...preferences, data]);
+      setPreferences([...preferences, result.data]);
       setNewPrefValue('');
       setIsAdding(false);
     } catch (err: any) {
@@ -93,23 +81,31 @@ export default function PreferencesManager() {
 
   const handleRemovePreference = async (id: string) => {
     try {
-      const { error: deleteError } = await supabase
-        .from('preferences')
-        .delete()
-        .eq('id', id);
+      const response = await fetch(`/api/preferences?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
 
-      if (deleteError) throw deleteError;
+      if (!response.ok) {
+        throw new Error('Failed to delete preference');
+      }
 
       const updatedPrefs = preferences.filter(p => p.id !== id);
       
       // Update priorities
-      for (let i = 0; i < updatedPrefs.length; i++) {
-        await supabase
-          .from('preferences')
-          .update({ priority: i + 1 })
-          .eq('id', updatedPrefs[i].id);
-        updatedPrefs[i].priority = i + 1;
-      }
+      const priorityUpdates = updatedPrefs.map((pref, i) => ({
+        id: pref.id,
+        priority: i + 1,
+      }));
+
+      await fetch('/api/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences: priorityUpdates }),
+      });
+
+      updatedPrefs.forEach((pref, i) => {
+        pref.priority = i + 1;
+      });
 
       setPreferences(updatedPrefs);
     } catch (err: any) {
@@ -123,13 +119,20 @@ export default function PreferencesManager() {
     newPrefs.splice(toIndex, 0, moved);
 
     // Update priorities
-    for (let i = 0; i < newPrefs.length; i++) {
-      newPrefs[i].priority = i + 1;
-      await supabase
-        .from('preferences')
-        .update({ priority: i + 1 })
-        .eq('id', newPrefs[i].id);
-    }
+    const priorityUpdates = newPrefs.map((pref, i) => ({
+      id: pref.id,
+      priority: i + 1,
+    }));
+
+    await fetch('/api/preferences', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ preferences: priorityUpdates }),
+    });
+
+    newPrefs.forEach((pref, i) => {
+      pref.priority = i + 1;
+    });
 
     setPreferences(newPrefs);
   };

@@ -5,7 +5,7 @@ import {
   User as FirebaseUser 
 } from 'firebase/auth';
 import { auth, googleProvider } from './firebase';
-import { supabase, User } from './supabase';
+import { User } from './supabase';
 import { validateDNI, sanitizeDNI, checkRateLimit } from './security';
 
 /**
@@ -45,44 +45,17 @@ export function onAuthChange(callback: (user: FirebaseUser | null) => void) {
  */
 export async function getUserFromDB(firebaseUid: string): Promise<User | null> {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('firebase_uid', firebaseUid)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 is "not found" error
-      throw error;
+    const response = await fetch(`/api/user?firebase_uid=${encodeURIComponent(firebaseUid)}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch user');
     }
 
+    const { data } = await response.json();
     return data;
   } catch (error: any) {
     console.error('Error fetching user from DB:', error);
     return null;
-  }
-}
-
-/**
- * Check if DNI already exists
- */
-export async function checkDNIExists(dni: string): Promise<boolean> {
-  try {
-    const sanitized = sanitizeDNI(dni);
-    const { data, error } = await supabase
-      .from('users')
-      .select('id')
-      .eq('dni', sanitized)
-      .single();
-
-    if (error && error.code === 'PGRST116') {
-      return false; // DNI doesn't exist
-    }
-
-    return !!data;
-  } catch (error) {
-    console.error('Error checking DNI:', error);
-    return true; // Err on the side of caution
   }
 }
 
@@ -104,42 +77,31 @@ export async function createUserInDB(
     throw new Error('Invalid DNI format');
   }
 
-  // Check if DNI already exists
-  const dniExists = await checkDNIExists(sanitized);
-  if (dniExists) {
-    throw new Error('This DNI is already registered');
-  }
-
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .insert({
+    const response = await fetch('/api/user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         firebase_uid: firebaseUser.uid,
         email: firebaseUser.email!,
         display_name: firebaseUser.displayName,
         photo_url: firebaseUser.photoURL,
         dni: sanitized,
-      })
-      .select()
-      .single();
+      }),
+    });
 
-    if (error) throw error;
+    const result = await response.json();
 
-    return data;
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to create user');
+    }
+
+    return result.data;
   } catch (error: any) {
     console.error('Error creating user in DB:', error);
-    
-    // Check for unique constraint violation
-    if (error.code === '23505') {
-      if (error.message.includes('dni')) {
-        throw new Error('This DNI is already registered');
-      }
-      if (error.message.includes('firebase_uid')) {
-        throw new Error('User already exists');
-      }
-    }
-    
-    throw new Error('Failed to create user account');
+    throw new Error(error.message || 'Failed to create user account');
   }
 }
 
@@ -147,19 +109,29 @@ export async function createUserInDB(
  * Update user EIR position
  */
 export async function updateEIRPosition(
-  userId: string,
+  firebaseUid: string,
   position: number
 ): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('users')
-      .update({ eir_position: position })
-      .eq('id', userId);
+    const response = await fetch('/api/user', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        firebase_uid: firebaseUid,
+        eir_position: position,
+      }),
+    });
 
-    if (error) throw error;
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to update position');
+    }
   } catch (error: any) {
     console.error('Error updating EIR position:', error);
-    throw new Error('Failed to update EIR position');
+    throw new Error(error.message || 'Failed to update EIR position');
   }
 }
 
@@ -168,14 +140,13 @@ export async function updateEIRPosition(
  */
 export async function getUserPreferences(userId: string) {
   try {
-    const { data, error } = await supabase
-      .from('preferences')
-      .select('*')
-      .eq('user_id', userId)
-      .order('priority', { ascending: true });
+    const response = await fetch(`/api/preferences?user_id=${encodeURIComponent(userId)}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch preferences');
+    }
 
-    if (error) throw error;
-
+    const { data } = await response.json();
     return data || [];
   } catch (error: any) {
     console.error('Error fetching preferences:', error);
