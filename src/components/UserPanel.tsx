@@ -27,24 +27,40 @@ interface ComparisonData {
 function InfoTooltip({ text }: { text: string }) {
   const [showTooltip, setShowTooltip] = useState(false);
 
+  const toggleTooltip = () => {
+    setShowTooltip(!showTooltip);
+  };
+
   return (
     <div className="relative inline-block">
       <span
-        className="inline-flex items-center justify-center w-4 h-4 text-xs text-gray-500 border border-gray-400 rounded-full cursor-help hover:bg-gray-100 hover:text-gray-700 transition-colors"
+        className="inline-flex items-center justify-center w-5 h-5 sm:w-4 sm:h-4 text-xs text-gray-500 border border-gray-400 rounded-full cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors active:bg-gray-200"
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
+        onClick={toggleTooltip}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          toggleTooltip();
+        }}
       >
         i
       </span>
       {showTooltip && (
-        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 sm:w-56 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg pointer-events-none">
-          <div className="relative">
-            {text}
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-              <div className="border-4 border-transparent border-t-gray-800"></div>
+        <>
+          <div 
+            className="fixed inset-0 z-40"
+            onClick={() => setShowTooltip(false)}
+            onTouchStart={() => setShowTooltip(false)}
+          />
+          <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 sm:w-56 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg">
+            <div className="relative">
+              {text}
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                <div className="border-4 border-transparent border-t-gray-800"></div>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
