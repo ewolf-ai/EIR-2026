@@ -151,17 +151,27 @@ export default function PreferencesManager() {
       priority: i + 1,
     }));
 
-    await fetch('/api/preferences', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ preferences: priorityUpdates }),
-    });
+    try {
+      const response = await fetch('/api/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences: priorityUpdates }),
+      });
 
-    newPrefs.forEach((pref, i) => {
-      pref.priority = i + 1;
-    });
+      if (!response.ok) {
+        throw new Error('No se pudo guardar el nuevo orden');
+      }
 
-    setPreferences(newPrefs);
+      // Update local state only after successful save
+      newPrefs.forEach((pref, i) => {
+        pref.priority = i + 1;
+      });
+
+      setPreferences(newPrefs);
+    } catch (err: any) {
+      alert('Error al reordenar preferencias: ' + err.message);
+      // Don't update local state if server update failed
+    }
   };
 
   if (!dbUser) return null;

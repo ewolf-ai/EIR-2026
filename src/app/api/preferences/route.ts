@@ -125,15 +125,23 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Update each preference
-    const updates = preferences.map(({ id, priority }) =>
+    // Update each preference and check for errors
+    const updatePromises = preferences.map(({ id, priority }) =>
       supabaseAdmin
         .from('preferences')
         .update({ priority })
         .eq('id', id)
+        .select()
     );
 
-    await Promise.all(updates);
+    const results = await Promise.all(updatePromises);
+
+    // Check if any update failed
+    const errors = results.filter(result => result.error);
+    if (errors.length > 0) {
+      console.error('Some updates failed:', errors);
+      throw new Error('Failed to update some preferences');
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

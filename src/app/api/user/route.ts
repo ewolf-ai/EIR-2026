@@ -132,6 +132,20 @@ export async function PATCH(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      // Check if EIR position is already taken by another user
+      const { data: existingPosition } = await supabaseAdmin
+        .from('users')
+        .select('firebase_uid, display_name')
+        .eq('eir_position', eir_position)
+        .single();
+
+      if (existingPosition && existingPosition.firebase_uid !== firebase_uid) {
+        return NextResponse.json(
+          { error: `Este número de plaza ya está siendo usado por ${existingPosition.display_name || 'otro usuario'}` },
+          { status: 409 }
+        );
+      }
     }
 
     // Update user
