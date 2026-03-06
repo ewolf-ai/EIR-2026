@@ -3,9 +3,30 @@
 import { useAuthStore } from '@/lib/store';
 import LoginButton from '@/components/LoginButton';
 import Dashboard from '@/components/Dashboard';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
   const { dbUser, loading } = useAuthStore();
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Fetch public stats
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats');
+        if (response.ok) {
+          const { data } = await response.json();
+          setTotalUsers(data.totalUsers);
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    if (!dbUser) {
+      fetchStats();
+    }
+  }, [dbUser]);
 
   if (loading) {
     return (
@@ -36,9 +57,21 @@ export default function Home() {
               Gestión de Plazas
             </h2>
             
-            <p className="text-gray-600 max-w-sm mx-auto">
+            <p className="text-gray-600 max-w-sm mx-auto mb-4">
               Organiza tus preferencias y compara tu posición con otros aspirantes a las plazas EIR 2026
             </p>
+
+            {/* User Counter */}
+            {totalUsers !== null && (
+              <div className="flex justify-center">
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-nursing-100 to-pastel-blue px-5 py-2.5 rounded-full border-2 border-nursing-300 shadow-md">
+                  <span className="text-lg">👥</span>
+                  <span className="text-xs text-nursing-600 font-medium">Ya somos</span>
+                  <span className="text-xl font-bold text-nursing-700">{totalUsers.toLocaleString('es-ES')}</span>
+                  <span className="text-xs text-nursing-600 font-medium">usuarios</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Login Card */}
