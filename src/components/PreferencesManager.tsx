@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '@/lib/store';
 import { Preference } from '@/lib/supabase';
 import { sanitizePreferenceValue, validatePreferenceType } from '@/lib/security';
@@ -10,39 +10,61 @@ export default function PreferencesManager() {
   const [isAdding, setIsAdding] = useState(false);
   const [newPrefType, setNewPrefType] = useState<'hospital' | 'province' | 'community'>('hospital');
   const [newPrefValue, setNewPrefValue] = useState('');
+  const [filterText, setFilterText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [allOptions, setAllOptions] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const loadSuggestions = useCallback(async () => {
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showDropdown]);
+
+  const loadAllOptions = useCallback(async () => {
     try {
       const response = await fetch(
-        `/api/search?type=${encodeURIComponent(newPrefType)}&search=${encodeURIComponent(newPrefValue)}`
+        `/api/options?type=${encodeURIComponent(newPrefType)}`
       );
       
       if (!response.ok) {
-        throw new Error('Failed to load suggestions');
+        throw new Error('Failed to load options');
       }
 
       const { data } = await response.json();
-      setSuggestions(data?.map((item: any) => item.value) || []);
+      setAllOptions(data || []);
     } catch (err) {
-      console.error('Error loading suggestions:', err);
-      setSuggestions([]);
+      console.error('Error loading options:', err);
+      setAllOptions([]);
     }
-  }, [newPrefValue, newPrefType]);
+  }, [newPrefType]);
 
   useEffect(() => {
-    if (newPrefValue.length >= 2) {
-      loadSuggestions();
-    } else {
-      setSuggestions([]);
+    if (isAdding) {
+      loadAllOptions();
     }
-  }, [newPrefValue, newPrefType, loadSuggestions]);
+  }, [newPrefType, isAdding, loadAllOptions]);
+
+  // Filter options based on search text
+  const filteredOptions = allOptions.filter(option =>
+    option.toLowerCase().includes(filterText.toLowerCase())
+  );
 
   const handleAddPreference = async () => {
     if (!dbUser || !newPrefValue.trim()) {
-      setError('Por favor, introduce una preferencia');
+      setError('Por favor, selecciona una preferencia de la lista');
       return;
     }
 
@@ -71,6 +93,8 @@ export default function PreferencesManager() {
 
       setPreferences([...preferences, result.data]);
       setNewPrefValue('');
+      setFilterText('');
+      setShowDropdown(false);
       setIsAdding(false);
     } catch (err: any) {
       setError(err.message || 'Error al añadir preferencia');
@@ -164,7 +188,12 @@ export default function PreferencesManager() {
             </label>
             <select
               value={newPrefType}
-              onChange={(e) => setNewPrefType(e.target.value as any)}
+              onChange={(e) => {
+                setNewPrefType(e.target.value as any);
+                setNewPrefValue('');
+                setFilterText('');
+                setShowDropdown(false);
+              }}
               className="w-full px-3 py-2 border-2 border-nursing-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-nursing-500"
             >
               <option value="hospital">Hospital concreto</option>
@@ -173,38 +202,73 @@ export default function PreferencesManager() {
             </select>
           </div>
 
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre
+              {newPrefType === 'hospital' ? 'Hospital' : newPrefType === 'province' ? 'Provincia' : 'Comunidad Autónoma'}
+              {newPrefValue && (
+                <span className="ml-2 text-xs text-nursing-600">✓ Seleccionado</span>
+              )}
             </label>
             <input
               type="text"
-              value={newPrefValue}
-              onChange={(e) => setNewPrefValue(e.target.value)}
-              placeholder={
+              value={filterText}
+              onChange={(e) => {
+                setFilterText(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              placeholder={`Buscar ${
                 newPrefType === 'hospital'
-                  ? 'Ej: H. UNIVERSITARIO LA PAZ'
+                  ? 'hospital'
                   : newPrefType === 'province'
-                  ? 'Ej: MADRID'
-                  : 'Ej: COMUNIDAD DE MADRID'
-              }
+                  ? 'provincia'
+                  : 'comunidad autónoma'
+              }...`}
               className="w-full px-3 py-2 border-2 border-nursing-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-nursing-500"
+              autoComplete="off"
             />
             
-            {suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border-2 border-nursing-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                {suggestions.map((suggestion, idx) => (
+            {showDropdown && filteredOptions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border-2 border-nursing-300 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                {filteredOptions.slice(0, 100).map((option, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
-                      setNewPrefValue(suggestion);
-                      setSuggestions([]);
+                      setNewPrefValue(option);
+                      setFilterText(option);
+                      setShowDropdown(false);
                     }}
-                    className="w-full px-3 py-2 text-left hover:bg-pastel-pink hover:bg-opacity-30 transition-colors"
+                    className={`w-full px-3 py-2 text-left hover:bg-pastel-pink hover:bg-opacity-30 transition-colors text-sm ${
+                      option === newPrefValue ? 'bg-nursing-100' : ''
+                    }`}
                   >
-                    {suggestion}
+                    {option}
                   </button>
                 ))}
+                {filteredOptions.length > 100 && (
+                  <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50">
+                    Mostrando 100 de {filteredOptions.length} resultados. Refina tu búsqueda.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {newPrefValue && (
+              <div className="mt-2 p-2 bg-nursing-50 rounded border border-nursing-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-nursing-700">
+                    {newPrefValue}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setNewPrefValue('');
+                      setFilterText('');
+                    }}
+                    className="text-nursing-600 hover:text-nursing-800"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -215,7 +279,7 @@ export default function PreferencesManager() {
             <button
               onClick={handleAddPreference}
               disabled={loading || !newPrefValue.trim()}
-              className="flex-1 px-3 py-2 bg-nursing-500 text-white rounded-lg hover:bg-nursing-600 transition-colors disabled:opacity-50"
+              className="flex-1 px-3 py-2 bg-nursing-500 text-white rounded-lg hover:bg-nursing-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Añadiendo...' : 'Añadir'}
             </button>
@@ -223,6 +287,8 @@ export default function PreferencesManager() {
               onClick={() => {
                 setIsAdding(false);
                 setNewPrefValue('');
+                setFilterText('');
+                setShowDropdown(false);
                 setError('');
               }}
               className="px-3 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
