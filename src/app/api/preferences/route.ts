@@ -131,23 +131,26 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    // Update each preference
-    const updatePromises = preferences.map(({ id, priority }) => {
-      console.log(`Updating preference ${id} to priority ${priority}`);
-      return supabaseAdmin
-        .from('preferences')
-        .update({ priority })
-        .eq('id', id);
+    // Validate that all items have id and priority
+    for (const pref of preferences) {
+      if (!pref.id || pref.priority === undefined) {
+        return NextResponse.json(
+          { error: 'Each preference must have id and priority' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Use RPC function to update priorities atomically
+    // This avoids UNIQUE constraint conflicts when reordering
+    const { error } = await supabaseAdmin.rpc('update_preferences_priorities', {
+      preferences_data: preferences
     });
 
-    const results = await Promise.all(updatePromises);
-
-    // Check if any update failed
-    const errors = results.filter(result => result.error);
-    if (errors.length > 0) {
-      console.error('Some updates failed:', errors);
+    if (error) {
+      console.error('Error updating preferences:', error);
       return NextResponse.json(
-        { error: 'Failed to update some preferences', details: errors },
+        { error: error.message || 'Failed to update preferences' },
         { status: 500 }
       );
     }

@@ -141,6 +141,40 @@ CREATE TRIGGER update_preferences_updated_at BEFORE UPDATE ON preferences
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
+### Update preferences priorities
+
+This function updates multiple preference priorities in a single atomic transaction,
+avoiding conflicts with the UNIQUE(user_id, priority) constraint.
+
+```sql
+CREATE OR REPLACE FUNCTION update_preferences_priorities(preferences_data JSONB)
+RETURNS void AS $$
+DECLARE
+  pref JSONB;
+  temp_offset INTEGER := 100000;
+BEGIN
+  -- First pass: Set all priorities to temporary values (offset by temp_offset)
+  -- This avoids UNIQUE constraint violations during the update
+  FOR pref IN SELECT * FROM jsonb_array_elements(preferences_data)
+  LOOP
+    UPDATE preferences
+    SET priority = ((pref->>'priority')::INTEGER + temp_offset),
+        updated_at = TIMEZONE('utc', NOW())
+    WHERE id = (pref->>'id')::UUID;
+  END LOOP;
+
+  -- Second pass: Set priorities to their final values
+  FOR pref IN SELECT * FROM jsonb_array_elements(preferences_data)
+  LOOP
+    UPDATE preferences
+    SET priority = (pref->>'priority')::INTEGER,
+        updated_at = TIMEZONE('utc', NOW())
+    WHERE id = (pref->>'id')::UUID;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+```
+
 ## Initial Data Population
 
 After creating the tables, you'll need to:
