@@ -4,10 +4,12 @@ import { PROVINCE_TO_COMMUNITY, ALL_HOSPITALS, ALL_PROVINCES, ALL_COMMUNITIES } 
 
 // GET - Get all available options for a given type from offered_positions table
 // Falls back to static lists if offered_positions is empty
+// If specialty is provided, filters to only show options where that specialty is available
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type'); // hospital, province, community
+    const specialty = searchParams.get('specialty'); // optional - filter by specialty
     const filter = searchParams.get('filter') || ''; // optional filter text
 
     if (!type) {
@@ -23,21 +25,33 @@ export async function GET(request: NextRequest) {
     switch (type) {
       case 'hospital':
         // Get distinct centers (hospitals) from offered_positions
-        const { data: hospitals, error: hospitalError } = await supabaseAdmin
+        // Filter by specialty if provided
+        let hospitalQuery = supabaseAdmin
           .from('offered_positions')
-          .select('center')
-          .order('center');
+          .select('center');
+        
+        if (specialty) {
+          hospitalQuery = hospitalQuery.eq('specialty', specialty);
+        }
+        
+        const { data: hospitals, error: hospitalError } = await hospitalQuery.order('center');
         
         if (hospitalError) {
           console.error('Error querying offered_positions:', hospitalError);
-          // Fallback to static list
-          options = ALL_HOSPITALS;
+          // Fallback to static list only if no specialty filter
+          options = specialty ? [] : ALL_HOSPITALS;
           fromDatabase = false;
         } else if (!hospitals || hospitals.length === 0) {
-          // Database is empty, use static list
-          console.warn('offered_positions table is empty, using static list');
-          options = ALL_HOSPITALS;
-          fromDatabase = false;
+          // Database is empty or no results for this specialty
+          if (specialty) {
+            // No hospitals for this specialty - return empty
+            options = [];
+            fromDatabase = true;
+          } else {
+            console.warn('offered_positions table is empty, using static list');
+            options = ALL_HOSPITALS;
+            fromDatabase = false;
+          }
         } else {
           options = Array.from(new Set(hospitals.map(h => h.center))).sort();
         }
@@ -45,19 +59,31 @@ export async function GET(request: NextRequest) {
 
       case 'province':
         // Get distinct provinces from offered_positions
-        const { data: provinces, error: provinceError } = await supabaseAdmin
+        // Filter by specialty if provided
+        let provinceQuery = supabaseAdmin
           .from('offered_positions')
-          .select('province')
-          .order('province');
+          .select('province');
+        
+        if (specialty) {
+          provinceQuery = provinceQuery.eq('specialty', specialty);
+        }
+        
+        const { data: provinces, error: provinceError } = await provinceQuery.order('province');
         
         if (provinceError) {
           console.error('Error querying offered_positions:', provinceError);
-          options = ALL_PROVINCES;
+          options = specialty ? [] : ALL_PROVINCES;
           fromDatabase = false;
         } else if (!provinces || provinces.length === 0) {
-          console.warn('offered_positions table is empty, using static list');
-          options = ALL_PROVINCES;
-          fromDatabase = false;
+          if (specialty) {
+            // No provinces for this specialty - return empty
+            options = [];
+            fromDatabase = true;
+          } else {
+            console.warn('offered_positions table is empty, using static list');
+            options = ALL_PROVINCES;
+            fromDatabase = false;
+          }
         } else {
           options = Array.from(new Set(provinces.map(p => p.province))).sort();
         }
@@ -65,18 +91,31 @@ export async function GET(request: NextRequest) {
 
       case 'community':
         // Get distinct provinces and map to communities
-        const { data: provincesForCommunity, error: communityError } = await supabaseAdmin
+        // Filter by specialty if provided
+        let communityQuery = supabaseAdmin
           .from('offered_positions')
           .select('province');
+        
+        if (specialty) {
+          communityQuery = communityQuery.eq('specialty', specialty);
+        }
+        
+        const { data: provincesForCommunity, error: communityError } = await communityQuery;
         
         if (communityError || !provincesForCommunity || provincesForCommunity.length === 0) {
           if (communityError) {
             console.error('Error querying offered_positions:', communityError);
+            options = specialty ? [] : ALL_COMMUNITIES;
+            fromDatabase = false;
+          } else if (specialty) {
+            // No communities for this specialty - return empty
+            options = [];
+            fromDatabase = true;
           } else {
             console.warn('offered_positions table is empty, using static list');
+            options = ALL_COMMUNITIES;
+            fromDatabase = false;
           }
-          options = ALL_COMMUNITIES;
-          fromDatabase = false;
         } else {
           const uniqueProvinces = Array.from(new Set(provincesForCommunity.map(p => p.province)));
           const communities = new Set<string>();
