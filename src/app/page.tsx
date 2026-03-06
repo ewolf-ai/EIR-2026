@@ -99,7 +99,6 @@ export default function Home() {
           {/* Ad containers at bottom - scripts from layout.tsx will render here */}
           <div className="mt-12 space-y-4">
             <div id="adsterra-banner-login" className="mx-auto"></div>
-            <div id="adsterra-socialbar-login" className="mx-auto"></div>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { sanitizePreferenceValue, validatePreferenceType } from '@/lib/security';
+import { sanitizePreferenceValue, validatePreferenceType, validateSpecialty } from '@/lib/security';
 
 // GET - Get user preferences
 export async function GET(request: NextRequest) {
@@ -37,12 +37,20 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { user_id, preference_type, preference_value, priority } = body;
+    const { user_id, specialty, preference_type, preference_value, priority } = body;
 
     // Validate required fields
-    if (!user_id || !preference_type || !preference_value || priority === undefined) {
+    if (!user_id || !specialty || !preference_type || !preference_value || priority === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Validate specialty
+    if (!validateSpecialty(specialty)) {
+      return NextResponse.json(
+        { error: 'Invalid specialty' },
         { status: 400 }
       );
     }
@@ -63,6 +71,7 @@ export async function POST(request: NextRequest) {
       .from('preferences')
       .insert({
         user_id,
+        specialty,
         preference_type,
         preference_value: sanitized,
         priority,
@@ -161,6 +170,48 @@ export async function PATCH(request: NextRequest) {
     console.error('Error updating preferences:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to update preferences' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update preference specialty
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, specialty } = body;
+
+    // Validate required fields
+    if (!id || !specialty) {
+      return NextResponse.json(
+        { error: 'Missing required fields (id, specialty)' },
+        { status: 400 }
+      );
+    }
+
+    // Validate specialty
+    if (!validateSpecialty(specialty)) {
+      return NextResponse.json(
+        { error: 'Invalid specialty' },
+        { status: 400 }
+      );
+    }
+
+    // Update specialty
+    const { data, error } = await supabaseAdmin
+      .from('preferences')
+      .update({ specialty })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ data }, { status: 200 });
+  } catch (error: any) {
+    console.error('Error updating specialty:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to update specialty' },
       { status: 500 }
     );
   }

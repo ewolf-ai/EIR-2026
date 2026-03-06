@@ -66,6 +66,21 @@ export function validatePreferenceType(type: string): type is 'hospital' | 'prov
 }
 
 /**
+ * Validates specialty type
+ */
+export function validateSpecialty(specialty: string): boolean {
+  const validSpecialties = [
+    'ENFERMERÍA FAMILIAR Y COMUNITARIA',
+    'ENFERMERÍA DE SALUD MENTAL',
+    'ENFERMERÍA OBSTETRICO-GINECOLÓGICA',
+    'ENFERMERÍA PEDIÁTRICA',
+    'ENFERMERÍA GERIÁTRICA',
+    'ENFERMERÍA DEL TRABAJO'
+  ];
+  return validSpecialties.includes(specialty);
+}
+
+/**
  * Sanitizes and validates user input for preferences
  */
 export function sanitizePreferenceValue(value: string): string {

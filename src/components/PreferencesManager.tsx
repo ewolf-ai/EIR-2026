@@ -4,10 +4,14 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '@/lib/store';
 import { Preference } from '@/lib/supabase';
 import { sanitizePreferenceValue, validatePreferenceType } from '@/lib/security';
+import { SPECIALTIES, Specialty, getSpecialtyInfo } from '@/lib/specialties';
 
 export default function PreferencesManager() {
   const { dbUser, preferences, setPreferences } = useAuthStore();
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingSpecialty, setEditingSpecialty] = useState<Specialty>('ENFERMERÍA FAMILIAR Y COMUNITARIA');
+  const [newSpecialty, setNewSpecialty] = useState<Specialty>('ENFERMERÍA FAMILIAR Y COMUNITARIA');
   const [newPrefType, setNewPrefType] = useState<'hospital' | 'province' | 'community'>('hospital');
   const [newPrefValue, setNewPrefValue] = useState('');
   const [filterText, setFilterText] = useState('');
@@ -80,6 +84,7 @@ export default function PreferencesManager() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: dbUser.id,
+          specialty: newSpecialty,
           preference_type: newPrefType,
           preference_value: sanitizedValue,
           priority: nextPriority,
@@ -137,6 +142,29 @@ export default function PreferencesManager() {
       setPreferences(updatedPrefs);
     } catch (err: any) {
       alert('Error al eliminar preferencia: ' + err.message);
+    }
+  };
+
+  const handleUpdateSpecialty = async (id: string, newSpecialty: Specialty) => {
+    try {
+      const response = await fetch('/api/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, specialty: newSpecialty }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update specialty');
+      }
+
+      const updatedPrefs = preferences.map(pref => 
+        pref.id === id ? { ...pref, specialty: newSpecialty } : pref
+      );
+      
+      setPreferences(updatedPrefs);
+      setEditingId(null);
+    } catch (err: any) {
+      alert('Error al actualizar especialidad: ' + err.message);
     }
   };
 
@@ -209,6 +237,23 @@ export default function PreferencesManager() {
 
       {isAdding && (
         <div className="mb-4 p-3 sm:p-4 bg-pastel-mint bg-opacity-30 rounded-lg space-y-3">
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+              Especialidad
+            </label>
+            <select
+              value={newSpecialty}
+              onChange={(e) => setNewSpecialty(e.target.value as Specialty)}
+              className="w-full px-3 py-2 border-2 border-nursing-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-nursing-500 text-sm"
+            >
+              {SPECIALTIES.map((spec) => (
+                <option key={spec.name} value={spec.name}>
+                  {spec.shortName}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
               Tipo de preferencia
@@ -361,6 +406,47 @@ export default function PreferencesManager() {
               </div>
 
               <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  {editingId === pref.id ? (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={editingSpecialty}
+                        onChange={(e) => setEditingSpecialty(e.target.value as Specialty)}
+                        className="text-xs px-2 py-1 border-2 border-nursing-300 rounded focus:outline-none focus:ring-2 focus:ring-nursing-500"
+                        autoFocus
+                      >
+                        {SPECIALTIES.map((spec) => (
+                          <option key={spec.name} value={spec.name}>
+                            {spec.shortName}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleUpdateSpecialty(pref.id, editingSpecialty)}
+                        className="text-xs px-2 py-1 bg-nursing-500 text-white rounded hover:bg-nursing-600"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="text-xs px-2 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditingId(pref.id);
+                        setEditingSpecialty(pref.specialty);
+                      }}
+                      className={`text-xs font-semibold px-2 py-0.5 rounded ${getSpecialtyInfo(pref.specialty).bgColor} ${getSpecialtyInfo(pref.specialty).color} hover:opacity-80 transition-opacity cursor-pointer`}
+                      title="Click para editar especialidad"
+                    >
+                      {getSpecialtyInfo(pref.specialty).shortName} ✏️
+                    </button>
+                  )}
+                </div>
                 <p className="font-medium text-gray-800 text-sm sm:text-base truncate">{pref.preference_value}</p>
                 <p className="text-xs text-gray-500">
                   {pref.preference_type === 'hospital'

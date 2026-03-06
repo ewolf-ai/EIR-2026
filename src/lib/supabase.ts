@@ -31,6 +31,7 @@ export interface User {
 export interface Preference {
   id: string;
   user_id: string;
+  specialty: 'ENFERMERÍA FAMILIAR Y COMUNITARIA' | 'ENFERMERÍA DE SALUD MENTAL' | 'ENFERMERÍA OBSTETRICO-GINECOLÓGICA' | 'ENFERMERÍA PEDIÁTRICA' | 'ENFERMERÍA GERIÁTRICA' | 'ENFERMERÍA DEL TRABAJO';
   preference_type: 'hospital' | 'province' | 'community';
   preference_value: string;
   priority: number;

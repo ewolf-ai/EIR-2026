@@ -47,6 +47,7 @@ Stores user preferences for hospitals, provinces, or autonomous communities.
 CREATE TABLE preferences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  specialty TEXT NOT NULL CHECK (specialty IN ('ENFERMERÍA FAMILIAR Y COMUNITARIA', 'ENFERMERÍA DE SALUD MENTAL', 'ENFERMERÍA OBSTETRICO-GINECOLÓGICA', 'ENFERMERÍA PEDIÁTRICA', 'ENFERMERÍA GERIÁTRICA', 'ENFERMERÍA DEL TRABAJO')),
   preference_type TEXT NOT NULL CHECK (preference_type IN ('hospital', 'province', 'community')),
   preference_value TEXT NOT NULL,
   priority INTEGER NOT NULL,
@@ -57,6 +58,7 @@ CREATE TABLE preferences (
 
 -- Add indexes
 CREATE INDEX idx_preferences_user_id ON preferences(user_id);
+CREATE INDEX idx_preferences_specialty ON preferences(specialty);
 CREATE INDEX idx_preferences_type ON preferences(preference_type);
 
 -- Enable RLS

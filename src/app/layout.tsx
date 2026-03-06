@@ -49,11 +49,6 @@ export default function RootLayout({
           strategy="afterInteractive"
           data-cfasync="false"
         />
-        <Script
-          src="https://www.highperformanceformat.com/28753420/invoke.js"
-          strategy="afterInteractive"
-          data-cfasync="false"
-        />
       </body>
     </html>
   );

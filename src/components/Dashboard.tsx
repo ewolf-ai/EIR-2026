@@ -105,7 +105,6 @@ export default function Dashboard() {
           {/* Ad containers - scripts from layout.tsx will render here */}
           <div className="mt-8 space-y-4">
             <div id="adsterra-banner" className="mx-auto"></div>
-            <div id="adsterra-socialbar" className="mx-auto"></div>
           </div>
         </footer>
       </main>

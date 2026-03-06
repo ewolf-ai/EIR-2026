@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { User, Preference } from '@/lib/supabase';
+import { getSpecialtyInfo } from '@/lib/specialties';
 
 interface UserWithPreferences {
   user: User;
@@ -113,7 +114,12 @@ export default function GlobalTable() {
                       <div className="space-y-1.5">
                         {preferences.slice(0, 3).map((pref, idx) => (
                           <div key={pref.id} className="text-sm bg-white bg-opacity-60 rounded px-2 py-1">
-                            <span className="text-nursing-600 font-bold">{idx + 1}.</span>{' '}
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-nursing-600 font-bold">{idx + 1}.</span>
+                              <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${getSpecialtyInfo(pref.specialty).bgColor} ${getSpecialtyInfo(pref.specialty).color}`}>
+                                {getSpecialtyInfo(pref.specialty).shortName}
+                              </span>
+                            </div>
                             <span className="text-gray-800">{pref.preference_value}</span>
                             <span className="text-gray-500 text-xs ml-1">
                               ({pref.preference_type === 'hospital' ? 'hospital' : pref.preference_type === 'province' ? 'provincia' : 'comunidad'})
@@ -190,8 +196,13 @@ export default function GlobalTable() {
                       <div className="space-y-1">
                         {preferences.slice(0, 3).map((pref, idx) => (
                           <div key={pref.id} className="text-sm">
-                            <span className="text-nursing-600 font-semibold">{idx + 1}.</span>{' '}
-                            <span className="text-gray-700">{pref.preference_value}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-nursing-600 font-semibold">{idx + 1}.</span>
+                              <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${getSpecialtyInfo(pref.specialty).bgColor} ${getSpecialtyInfo(pref.specialty).color}`}>
+                                {getSpecialtyInfo(pref.specialty).shortName}
+                              </span>
+                            </div>
+                            <span className="text-gray-700 ml-5">{pref.preference_value}</span>
                             <span className="text-gray-400 text-xs ml-1">
                               ({pref.preference_type === 'hospital' ? 'hospital' : pref.preference_type === 'province' ? 'provincia' : 'comunidad'})
                             </span>
