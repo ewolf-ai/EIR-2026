@@ -118,6 +118,8 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { preferences } = body; // Array of {id, priority}
 
+    console.log('PATCH preferences received:', preferences);
+
     if (!Array.isArray(preferences)) {
       return NextResponse.json(
         { error: 'preferences must be an array' },
@@ -130,12 +132,13 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update each preference
-    const updatePromises = preferences.map(({ id, priority }) =>
-      supabaseAdmin
+    const updatePromises = preferences.map(({ id, priority }) => {
+      console.log(`Updating preference ${id} to priority ${priority}`);
+      return supabaseAdmin
         .from('preferences')
         .update({ priority })
-        .eq('id', id)
-    );
+        .eq('id', id);
+    });
 
     const results = await Promise.all(updatePromises);
 
@@ -149,7 +152,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true });
+    console.log('All preferences updated successfully');
+    return NextResponse.json({ success: true, updated: preferences.length });
   } catch (error: any) {
     console.error('Error updating preferences:', error);
     return NextResponse.json(
