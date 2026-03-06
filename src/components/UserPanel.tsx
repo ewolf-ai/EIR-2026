@@ -23,6 +23,33 @@ interface ComparisonData {
   preferenceAnalysis: PreferenceAnalysis[];
 }
 
+// Tooltip component
+function InfoTooltip({ text }: { text: string }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <div className="relative inline-block">
+      <span
+        className="inline-flex items-center justify-center w-4 h-4 text-xs text-gray-500 border border-gray-400 rounded-full cursor-help hover:bg-gray-100 hover:text-gray-700 transition-colors"
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        i
+      </span>
+      {showTooltip && (
+        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 sm:w-56 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg pointer-events-none">
+          <div className="relative">
+            {text}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+              <div className="border-4 border-transparent border-t-gray-800"></div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function UserPanel() {
   const { dbUser, preferences } = useAuthStore();
   const [editing, setEditing] = useState(false);
@@ -244,33 +271,51 @@ export default function UserPanel() {
                 {analysis.type === 'hospital' ? (
                   // Full stats for hospital
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div className="bg-blue-50 rounded p-2">
+                    <div className="bg-blue-50 rounded p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs text-gray-800 font-medium">Plazas ofertadas</p>
+                        <InfoTooltip text="Número total de plazas ofertadas para este centro en esta especialidad." />
+                      </div>
                       <p className="text-lg font-bold text-blue-700">{analysis.totalPositions}</p>
-                      <p className="text-xs text-gray-600">Plazas totales</p>
                     </div>
-                    <div className="bg-orange-50 rounded p-2">
+                    <div className="bg-orange-50 rounded p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs text-gray-800 font-medium">1ª opción</p>
+                        <InfoTooltip text="Número de usuarios que han escogido esta plaza como primera opción y van por delante de ti en el ranking." />
+                      </div>
                       <p className="text-lg font-bold text-orange-700">{analysis.usersFirstOption}</p>
-                      <p className="text-xs text-gray-600">1ª opción</p>
                     </div>
-                    <div className="bg-purple-50 rounded p-2">
+                    <div className="bg-purple-50 rounded p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs text-gray-800 font-medium">Top 3</p>
+                        <InfoTooltip text="Número de usuarios que han escogido esta plaza dentro de sus tres primeras opciones y van por delante de ti en el ranking." />
+                      </div>
                       <p className="text-lg font-bold text-purple-700">{analysis.usersTop3}</p>
-                      <p className="text-xs text-gray-600">Top 3</p>
                     </div>
-                    <div className="bg-green-50 rounded p-2">
+                    <div className="bg-green-50 rounded p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs text-gray-800 font-medium">Misma provincia</p>
+                        <InfoTooltip text="Número de usuarios que compiten por plazas en la misma provincia y van por delante de ti en el ranking." />
+                      </div>
                       <p className="text-lg font-bold text-green-700">{analysis.usersInProvince}</p>
-                      <p className="text-xs text-gray-600">Misma provincia</p>
                     </div>
                   </div>
                 ) : (
                   // Simplified stats for province/community
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div className="bg-blue-50 rounded p-2">
+                    <div className="bg-blue-50 rounded p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs text-gray-800 font-medium">Plazas ofertadas</p>
+                        <InfoTooltip text="Número total de plazas ofertadas en esta provincia/comunidad para esta especialidad." />
+                      </div>
                       <p className="text-lg font-bold text-blue-700">{analysis.totalPositions}</p>
-                      <p className="text-xs text-gray-600">Plazas libres</p>
                     </div>
-                    <div className="bg-green-50 rounded p-2">
+                    <div className="bg-green-50 rounded p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs text-gray-800 font-medium">Compiten por provincia</p>
+                        <InfoTooltip text="Número de usuarios que compiten por plazas en esta provincia y van por delante de ti en el ranking." />
+                      </div>
                       <p className="text-lg font-bold text-green-700">{analysis.usersInProvince}</p>
-                      <p className="text-xs text-gray-600">Compiten por provincia</p>
                     </div>
                   </div>
                 )}
