@@ -21,6 +21,26 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Nota informativa temporal de verificación de preferencias */}
+        {new Date() <= new Date('2026-03-06T23:59:59') && (
+          <div className="mb-6 sm:mb-8 bg-blue-50 border-l-4 border-blue-400 rounded-lg shadow-md p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl flex-shrink-0">ℹ️</span>
+              <div className="flex-1">
+                <h3 className="text-base sm:text-lg font-semibold mb-2">
+                  <span className="text-red-600">Aviso: Verifica tus preferencias</span>
+                </h3>
+                <p className="text-sm sm:text-base text-blue-800 leading-relaxed mb-2">
+                  Se han detectado algunas incongruencias entre hospitales y unidades docentes en preferencias introducidas anteriormente.
+                </p>
+                <p className="text-sm sm:text-base text-blue-700 leading-relaxed">
+                  Por favor, revisa que tus preferencias sean correctas. Si encuentras alguna errónea, bórrala y vuelve a introducirla.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* User Panel */}
         <UserPanel />
 
