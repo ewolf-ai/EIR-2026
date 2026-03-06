@@ -336,14 +336,14 @@ export default function UserPanel() {
                     </div>
                     <div className="bg-orange-50 rounded p-2 flex flex-col items-center text-center">
                       <div className="flex items-center gap-1 mb-1">
-                        <p className="text-xs text-gray-800 font-medium">1ª opción</p>
+                        <p className="text-xs text-gray-800 font-medium">Usuarios que la han elegido como 1ª opción</p>
                         <InfoTooltip text="Número de usuarios que han escogido esta plaza como primera opción y van por delante de ti en el ranking." />
                       </div>
                       <p className="text-2xl font-bold text-orange-700">{analysis.usersFirstOption}</p>
                     </div>
                     <div className="bg-purple-50 rounded p-2 flex flex-col items-center text-center">
                       <div className="flex items-center gap-1 mb-1">
-                        <p className="text-xs text-gray-800 font-medium">Top 3</p>
+                        <p className="text-xs text-gray-800 font-medium">Usuarios que la tienen en su top 3</p>
                         <InfoTooltip text="Número de usuarios que han escogido esta plaza dentro de sus tres primeras opciones y van por delante de ti en el ranking." />
                       </div>
                       <p className="text-2xl font-bold text-purple-700">{analysis.usersTop3}</p>
