@@ -101,11 +101,6 @@ export default function Dashboard() {
         <footer className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-gray-500 pb-6 sm:pb-8">
           <p>EIR 2026 - Gestión de Plazas</p>
           <p className="mt-1">Desarrollado con ❤️ para futuros residentes de enfermería</p>
-          
-          {/* Ad containers - scripts from layout.tsx will render here */}
-          <div className="mt-8 space-y-4">
-            <div id="adsterra-banner" className="mx-auto"></div>
-          </div>
         </footer>
       </main>
     </div>

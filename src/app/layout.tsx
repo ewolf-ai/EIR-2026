@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import Script from 'next/script';
 import './globals.css';
 import AuthProvider from '@/components/AuthProvider';
 
@@ -24,31 +23,9 @@ export default function RootLayout({
     <html lang="es">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        
-        {/* Adsterra Banner 160x300 */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              atOptions = {
-                'key' : 'ab7bf4e790396ec2699667b25edf831f',
-                'format' : 'iframe',
-                'height' : 300,
-                'width' : 160,
-                'params' : {}
-              };
-            `,
-          }}
-        />
       </head>
       <body className={inter.className}>
         <AuthProvider>{children}</AuthProvider>
-        
-        {/* Adsterra Scripts - Loaded after page is interactive */}
-        <Script
-          src="https://www.highperformanceformat.com/ab7bf4e790396ec2699667b25edf831f/invoke.js"
-          strategy="afterInteractive"
-          data-cfasync="false"
-        />
       </body>
     </html>
   );
