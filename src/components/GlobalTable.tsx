@@ -91,21 +91,6 @@ export default function GlobalTable() {
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {user.photo_url && (
-                      <Image
-                        src={user.photo_url}
-                        alt={user.display_name || 'User'}
-                        width={32}
-                        height={32}
-                        className="rounded-full flex-shrink-0"
-                      />
-                    )}
-                    <span className="font-semibold text-gray-800 text-base truncate">
-                      {user.display_name || 'Usuario'}
-                    </span>
-                  </div>
-                  
                   <div className="mt-2">
                     <p className="text-xs font-semibold text-nursing-700 mb-1.5">Preferencias:</p>
                     {preferences.length === 0 ? (
@@ -151,9 +136,6 @@ export default function GlobalTable() {
                 Posición
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-nursing-800">
-                Usuario
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-nursing-800">
                 Preferencias
               </th>
             </tr>
@@ -161,7 +143,7 @@ export default function GlobalTable() {
           <tbody className="divide-y divide-gray-200">
             {data.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={2} className="px-4 py-8 text-center text-gray-500">
                   No hay usuarios registrados todavía
                 </td>
               </tr>
@@ -172,22 +154,6 @@ export default function GlobalTable() {
                     <span className="inline-flex items-center justify-center w-12 h-12 bg-nursing-500 text-white rounded-full font-bold">
                       {user.eir_position}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      {user.photo_url && (
-                        <Image
-                          src={user.photo_url}
-                          alt={user.display_name || 'User'}
-                          width={32}
-                          height={32}
-                          className="rounded-full"
-                        />
-                      )}
-                      <span className="font-medium text-gray-800">
-                        {user.display_name || 'Usuario'}
-                      </span>
-                    </div>
                   </td>
                   <td className="px-4 py-3">
                     {preferences.length === 0 ? (
