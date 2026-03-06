@@ -28,15 +28,26 @@ export default function Header() {
             </div>
           </div>
 
-          {dbUser && (
-            <button
-              onClick={handleLogout}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <a
+              href="https://ewolf-web.vercel.app/#team"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-nursing-700 hover:text-nursing-900 hover:bg-pastel-pink hover:bg-opacity-30 rounded-lg transition-colors"
             >
-              <span className="hidden sm:inline">Cerrar sesión</span>
-              <span className="sm:hidden">Salir</span>
-            </button>
-          )}
+              Equipo
+            </a>
+            
+            {dbUser && (
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-nursing-700 hover:text-nursing-900 hover:bg-pastel-pink hover:bg-opacity-30 rounded-lg transition-colors"
+              >
+                <span className="hidden sm:inline">Cerrar sesión</span>
+                <span className="sm:hidden">Salir</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </header>
