@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     // Sanitize preference value
     const sanitized = sanitizePreferenceValue(preference_value);
 
-    // Validate that preference_value exists in offered_positions table
+    // Validate that preference_value exists in offered_positions table for the given specialty
     // Only validate if the table has data (to avoid blocking when table is empty)
     let shouldValidate = false;
     let validationQuery;
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
           .from('offered_positions')
           .select('center')
           .eq('center', sanitized)
+          .eq('specialty', specialty)
           .limit(1);
         shouldValidate = true;
         break;
@@ -85,15 +86,32 @@ export async function POST(request: NextRequest) {
           .from('offered_positions')
           .select('province')
           .eq('province', sanitized)
+          .eq('specialty', specialty)
           .limit(1);
         shouldValidate = true;
         break;
       case 'community':
-        // For communities, we need to check if any province in that community exists
-        // This is more complex, so we'll skip strict validation for now
-        // Communities are derived from provinces, so we trust the client selection
-        validationQuery = null;
-        shouldValidate = false;
+        // For communities, we need to check if any province in that community has this specialty
+        // Get all provinces in this community from PROVINCE_TO_COMMUNITY mapping
+        // Then check if any of them has positions for this specialty
+        const { PROVINCE_TO_COMMUNITY } = await import('@/lib/eir-data');
+        const provincesInCommunity = PROVINCE_TO_COMMUNITY
+          .filter(mapping => mapping.community === sanitized)
+          .map(mapping => mapping.province);
+        
+        if (provincesInCommunity.length > 0) {
+          validationQuery = supabaseAdmin
+            .from('offered_positions')
+            .select('province')
+            .in('province', provincesInCommunity)
+            .eq('specialty', specialty)
+            .limit(1);
+          shouldValidate = true;
+        } else {
+          // Community not found in mapping - will fail validation below
+          validationQuery = null;
+          shouldValidate = false;
+        }
         break;
     }
 
@@ -110,9 +128,9 @@ export async function POST(request: NextRequest) {
               .select('*', { count: 'exact', head: true });
             
             if (count && count > 0) {
-              // Table has data but value not found - reject
+              // Table has data but value not found for this specialty - reject
               return NextResponse.json(
-                { error: `El valor "${sanitized}" no existe en las posiciones ofertadas para el tipo "${preference_type}"` },
+                { error: `La especialidad "${specialty}" no está disponible en "${sanitized}" (${preference_type})` },
                 { status: 400 }
               );
             }

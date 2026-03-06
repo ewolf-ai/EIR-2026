@@ -40,7 +40,7 @@ export default function PreferencesManager() {
   const loadAllOptions = useCallback(async () => {
     try {
       const response = await fetch(
-        `/api/options?type=${encodeURIComponent(newPrefType)}`
+        `/api/options?type=${encodeURIComponent(newPrefType)}&specialty=${encodeURIComponent(newSpecialty)}`
       );
       
       if (!response.ok) {
@@ -53,13 +53,13 @@ export default function PreferencesManager() {
       console.error('Error loading options:', err);
       setAllOptions([]);
     }
-  }, [newPrefType]);
+  }, [newPrefType, newSpecialty]);
 
   useEffect(() => {
     if (isAdding) {
       loadAllOptions();
     }
-  }, [newPrefType, isAdding, loadAllOptions]);
+  }, [newPrefType, newSpecialty, isAdding, loadAllOptions]);
 
   // Filter options based on search text
   const filteredOptions = allOptions.filter(option =>
@@ -243,7 +243,12 @@ export default function PreferencesManager() {
             </label>
             <select
               value={newSpecialty}
-              onChange={(e) => setNewSpecialty(e.target.value as Specialty)}
+              onChange={(e) => {
+                setNewSpecialty(e.target.value as Specialty);
+                setNewPrefValue('');
+                setFilterText('');
+                setShowDropdown(false);
+              }}
               className="w-full px-3 py-2 border-2 border-nursing-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-nursing-500 text-sm"
             >
               {SPECIALTIES.map((spec) => (
