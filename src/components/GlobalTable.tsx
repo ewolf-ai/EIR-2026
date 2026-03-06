@@ -14,6 +14,8 @@ export default function GlobalTable() {
   const [data, setData] = useState<UserWithPreferences[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'position' | 'name'>('position');
+  const [itemsPerPage, setItemsPerPage] = useState<number>(50);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const loadData = useCallback(async () => {
     try {
@@ -38,6 +40,17 @@ export default function GlobalTable() {
     loadData();
   }, [loadData]);
 
+  // Reset to first page when items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = data.slice(startIndex, endIndex);
+
   if (loading) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -56,21 +69,50 @@ export default function GlobalTable() {
           <span className="leading-tight">Tabla Global de Preferencias</span>
         </h3>
         
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 whitespace-nowrap">Ordenar por:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-1.5 border-2 border-nursing-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-nursing-500 flex-1 sm:flex-none"
-          >
-            <option value="position">Posición</option>
-            <option value="name">Nombre</option>
-          </select>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          {/* Sort control */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 whitespace-nowrap">Ordenar por:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-1.5 border-2 border-nursing-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-nursing-500 flex-1 sm:flex-none"
+            >
+              <option value="position">Posición</option>
+              <option value="name">Nombre</option>
+            </select>
+          </div>
+
+          {/* Items per page control */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 whitespace-nowrap">Mostrar:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="px-3 py-1.5 border-2 border-nursing-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-nursing-500 flex-1 sm:flex-none"
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={75}>75</option>
+              <option value={100}>100</option>
+              <option value={150}>150</option>
+              <option value={200}>200</option>
+              <option value={250}>250</option>
+              <option value={300}>300</option>
+              <option value={500}>500</option>
+              <option value={1000}>1000</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <p className="text-sm text-gray-600 mb-4">
         Total de usuarios registrados: <span className="font-bold">{data.length}</span>
+        {totalPages > 1 && (
+          <span className="ml-3">
+            (Mostrando {startIndex + 1}-{Math.min(endIndex, data.length)})
+          </span>
+        )}
       </p>
 
       {/* Vista móvil - Cards */}
@@ -80,7 +122,7 @@ export default function GlobalTable() {
             <p>No hay usuarios registrados todavía</p>
           </div>
         ) : (
-          data.map(({ user, preferences }) => (
+          paginatedData.map(({ user, preferences }) => (
             <div 
               key={user.id} 
               className="bg-gradient-to-r from-pastel-pink to-pastel-mint bg-opacity-30 rounded-xl p-4 border border-nursing-200"
@@ -148,7 +190,7 @@ export default function GlobalTable() {
                 </td>
               </tr>
             ) : (
-              data.map(({ user, preferences }) => (
+              paginatedData.map(({ user, preferences }) => (
                 <tr key={user.id} className="hover:bg-pastel-mint hover:bg-opacity-20 transition-colors">
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center justify-center w-12 h-12 bg-nursing-500 text-white rounded-full font-bold">
@@ -190,11 +232,74 @@ export default function GlobalTable() {
         </div>
       </div>
 
-      {data.length > 10 && (
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
-            Mostrando {data.length} usuarios
-          </p>
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-sm text-gray-600">
+            Página {currentPage} de {totalPages}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 border-2 border-nursing-300 rounded-lg text-sm hover:bg-nursing-50 focus:outline-none focus:ring-2 focus:ring-nursing-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              ««
+            </button>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 border-2 border-nursing-300 rounded-lg text-sm hover:bg-nursing-50 focus:outline-none focus:ring-2 focus:ring-nursing-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              «
+            </button>
+            
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-8 h-8 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-nursing-500 transition-colors ${
+                      currentPage === pageNum
+                        ? 'bg-nursing-500 text-white font-bold'
+                        : 'border-2 border-nursing-300 hover:bg-nursing-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 border-2 border-nursing-300 rounded-lg text-sm hover:bg-nursing-50 focus:outline-none focus:ring-2 focus:ring-nursing-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              »
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 border-2 border-nursing-300 rounded-lg text-sm hover:bg-nursing-50 focus:outline-none focus:ring-2 focus:ring-nursing-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              »»
+            </button>
+          </div>
         </div>
       )}
     </div>
