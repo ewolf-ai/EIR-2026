@@ -4,6 +4,7 @@ import Header from './Header';
 import UserPanel from './UserPanel';
 import PreferencesManager from './PreferencesManager';
 import GlobalTable from './GlobalTable';
+import AdBanner from './AdBanner';
 
 export default function Dashboard() {
   return (
@@ -96,6 +97,9 @@ export default function Dashboard() {
 
         {/* Global Table */}
         <GlobalTable />
+
+        {/* Advertisement */}
+        <AdBanner />
 
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-gray-500 pb-6 sm:pb-8">
