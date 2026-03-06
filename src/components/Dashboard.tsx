@@ -4,16 +4,11 @@ import Header from './Header';
 import UserPanel from './UserPanel';
 import PreferencesManager from './PreferencesManager';
 import GlobalTable from './GlobalTable';
-import AdBanner from './AdBanner';
-import SocialBar from './SocialBar';
 
 export default function Dashboard() {
   return (
     <div className="min-h-screen overflow-x-hidden">
       <Header />
-      
-      {/* Social Bar */}
-      <SocialBar className="py-2" />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Welcome Section */}
@@ -102,16 +97,16 @@ export default function Dashboard() {
         {/* Global Table */}
         <GlobalTable />
 
-        {/* Advertisement */}
-        <AdBanner />
-        
-        {/* Social Bar */}
-        <SocialBar className="mt-6" />
-
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-gray-500 pb-6 sm:pb-8">
           <p>EIR 2026 - Gestión de Plazas</p>
           <p className="mt-1">Desarrollado con ❤️ para futuros residentes de enfermería</p>
+          
+          {/* Ad containers - scripts from layout.tsx will render here */}
+          <div className="mt-8 space-y-4">
+            <div id="adsterra-banner" className="mx-auto"></div>
+            <div id="adsterra-socialbar" className="mx-auto"></div>
+          </div>
         </footer>
       </main>
     </div>

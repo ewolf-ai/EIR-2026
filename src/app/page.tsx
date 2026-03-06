@@ -3,8 +3,6 @@
 import { useAuthStore } from '@/lib/store';
 import LoginButton from '@/components/LoginButton';
 import Dashboard from '@/components/Dashboard';
-import AdBanner from '@/components/AdBanner';
-import SocialBar from '@/components/SocialBar';
 
 export default function Home() {
   const { dbUser, loading } = useAuthStore();
@@ -22,11 +20,7 @@ export default function Home() {
 
   if (!dbUser) {
     return (
-      <div className="min-h-screen px-4">
-        {/* Social Bar at top */}
-        <SocialBar className="py-4" />
-        
-        <div className="flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md w-full">
           {/* Logo and Welcome */}
           <div className="text-center mb-8">
@@ -101,12 +95,12 @@ export default function Home() {
               <span>⚕️</span>
             </div>
           </div>
-        </div>
-        </div>
-        
-        {/* Advertisement Banner */}
-        <div className="mt-8">
-          <AdBanner />
+          
+          {/* Ad containers at bottom - scripts from layout.tsx will render here */}
+          <div className="mt-12 space-y-4">
+            <div id="adsterra-banner-login" className="mx-auto"></div>
+            <div id="adsterra-socialbar-login" className="mx-auto"></div>
+          </div>
         </div>
       </div>
     );
