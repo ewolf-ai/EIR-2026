@@ -230,20 +230,37 @@ export default function UserPanel() {
               <p className="text-xs text-gray-600 mt-1 break-words">Usuarios totales registrados</p>
             </div>
             <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 overflow-hidden">
-              <p className="text-xl sm:text-2xl font-bold text-green-600">
-                {comparison.assignedPosition ? '✓' : '?'}
+              <p className="text-xl sm:text-2xl font-bold">
+                {comparison.assignedPosition ? (
+                  <span className="text-green-600">✓</span>
+                ) : (
+                  <span className="text-red-600">✗</span>
+                )}
               </p>
               <p className="text-xs text-gray-600 mt-1 break-words">
-                {comparison.assignedPosition ? 'Plaza simulada asignada' : 'Esperando simulación'}
+                {comparison.assignedPosition ? 'Plaza simulada asignada' : 'Sin plaza adjudicada'}
               </p>
             </div>
           </div>
 
-          {/* Assigned Position */}
+          {/* Assigned Position - Success */}
           {comparison.assignedPosition && (
             <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border-l-4 border-green-500">
               <h4 className="font-semibold text-green-800 mb-1 text-sm">Tu plaza adjudicada (simulación):</h4>
               <p className="text-sm text-green-700 font-medium break-words">{comparison.assignedPosition}</p>
+            </div>
+          )}
+
+          {/* Assigned Position - No assignment */}
+          {!comparison.assignedPosition && (
+            <div className="mb-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg p-3 border-l-4 border-red-500">
+              <h4 className="font-semibold text-red-800 mb-1 text-sm flex items-center gap-1">
+                <span>⚠️</span>
+                <span>Sin plaza adjudicada (simulación)</span>
+              </h4>
+              <p className="text-xs text-red-700 leading-relaxed">
+                Según la simulación con las preferencias actuales, no obtendrías plaza. Esto puede deberse a que todas tus preferencias ya están ocupadas por usuarios con mejor posición.
+              </p>
             </div>
           )}
 
