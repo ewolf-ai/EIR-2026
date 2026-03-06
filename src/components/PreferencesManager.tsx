@@ -145,7 +145,13 @@ export default function PreferencesManager() {
     const [moved] = newPrefs.splice(fromIndex, 1);
     newPrefs.splice(toIndex, 0, moved);
 
-    // Update priorities
+    // Update local state immediately for responsive UI
+    newPrefs.forEach((pref, i) => {
+      pref.priority = i + 1;
+    });
+    setPreferences(newPrefs);
+
+    // Update priorities in background
     const priorityUpdates = newPrefs.map((pref, i) => ({
       id: pref.id,
       priority: i + 1,
@@ -159,18 +165,13 @@ export default function PreferencesManager() {
       });
 
       if (!response.ok) {
-        throw new Error('No se pudo guardar el nuevo orden');
+        const errorData = await response.json();
+        console.error('Error al reordenar:', errorData);
+        // Optionally notify user but don't block UI
       }
-
-      // Update local state only after successful save
-      newPrefs.forEach((pref, i) => {
-        pref.priority = i + 1;
-      });
-
-      setPreferences(newPrefs);
     } catch (err: any) {
-      alert('Error al reordenar preferencias: ' + err.message);
-      // Don't update local state if server update failed
+      console.error('Error al reordenar preferencias:', err);
+      // Optionally notify user but don't block UI
     }
   };
 
