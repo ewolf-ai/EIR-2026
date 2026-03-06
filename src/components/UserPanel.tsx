@@ -307,51 +307,51 @@ export default function UserPanel() {
                 {analysis.type === 'hospital' ? (
                   // Full stats for hospital
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div className="bg-blue-50 rounded p-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1">
+                    <div className="bg-blue-50 rounded p-2 flex flex-col items-center text-center">
+                      <div className="flex items-center gap-1 mb-1">
                         <p className="text-xs text-gray-800 font-medium">Plazas ofertadas</p>
                         <InfoTooltip text="Número total de plazas ofertadas para este centro en esta especialidad." />
                       </div>
-                      <p className="text-lg font-bold text-blue-700">{analysis.totalPositions}</p>
+                      <p className="text-2xl font-bold text-blue-700">{analysis.totalPositions}</p>
                     </div>
-                    <div className="bg-orange-50 rounded p-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1">
+                    <div className="bg-orange-50 rounded p-2 flex flex-col items-center text-center">
+                      <div className="flex items-center gap-1 mb-1">
                         <p className="text-xs text-gray-800 font-medium">1ª opción</p>
                         <InfoTooltip text="Número de usuarios que han escogido esta plaza como primera opción y van por delante de ti en el ranking." />
                       </div>
-                      <p className="text-lg font-bold text-orange-700">{analysis.usersFirstOption}</p>
+                      <p className="text-2xl font-bold text-orange-700">{analysis.usersFirstOption}</p>
                     </div>
-                    <div className="bg-purple-50 rounded p-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1">
+                    <div className="bg-purple-50 rounded p-2 flex flex-col items-center text-center">
+                      <div className="flex items-center gap-1 mb-1">
                         <p className="text-xs text-gray-800 font-medium">Top 3</p>
                         <InfoTooltip text="Número de usuarios que han escogido esta plaza dentro de sus tres primeras opciones y van por delante de ti en el ranking." />
                       </div>
-                      <p className="text-lg font-bold text-purple-700">{analysis.usersTop3}</p>
+                      <p className="text-2xl font-bold text-purple-700">{analysis.usersTop3}</p>
                     </div>
-                    <div className="bg-green-50 rounded p-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1">
+                    <div className="bg-green-50 rounded p-2 flex flex-col items-center text-center">
+                      <div className="flex items-center gap-1 mb-1">
                         <p className="text-xs text-gray-800 font-medium">Misma provincia</p>
                         <InfoTooltip text="Número de usuarios que compiten por plazas en la misma provincia y van por delante de ti en el ranking." />
                       </div>
-                      <p className="text-lg font-bold text-green-700">{analysis.usersInProvince}</p>
+                      <p className="text-2xl font-bold text-green-700">{analysis.usersInProvince}</p>
                     </div>
                   </div>
                 ) : (
                   // Simplified stats for province/community
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div className="bg-blue-50 rounded p-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1">
+                    <div className="bg-blue-50 rounded p-2 flex flex-col items-center text-center">
+                      <div className="flex items-center gap-1 mb-1">
                         <p className="text-xs text-gray-800 font-medium">Plazas ofertadas</p>
                         <InfoTooltip text="Número total de plazas ofertadas en esta provincia/comunidad para esta especialidad." />
                       </div>
-                      <p className="text-lg font-bold text-blue-700">{analysis.totalPositions}</p>
+                      <p className="text-2xl font-bold text-blue-700">{analysis.totalPositions}</p>
                     </div>
-                    <div className="bg-green-50 rounded p-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1">
+                    <div className="bg-green-50 rounded p-2 flex flex-col items-center text-center">
+                      <div className="flex items-center gap-1 mb-1">
                         <p className="text-xs text-gray-800 font-medium">Compiten por provincia</p>
                         <InfoTooltip text="Número de usuarios que compiten por plazas en esta provincia y van por delante de ti en el ranking." />
                       </div>
-                      <p className="text-lg font-bold text-green-700">{analysis.usersInProvince}</p>
+                      <p className="text-2xl font-bold text-green-700">{analysis.usersInProvince}</p>
                     </div>
                   </div>
                 )}
