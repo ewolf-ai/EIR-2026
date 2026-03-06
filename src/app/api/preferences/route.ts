@@ -66,6 +66,66 @@ export async function POST(request: NextRequest) {
     // Sanitize preference value
     const sanitized = sanitizePreferenceValue(preference_value);
 
+    // Validate that preference_value exists in offered_positions table
+    // Only validate if the table has data (to avoid blocking when table is empty)
+    let shouldValidate = false;
+    let validationQuery;
+    
+    switch (preference_type) {
+      case 'hospital':
+        validationQuery = supabaseAdmin
+          .from('offered_positions')
+          .select('center')
+          .eq('center', sanitized)
+          .limit(1);
+        shouldValidate = true;
+        break;
+      case 'province':
+        validationQuery = supabaseAdmin
+          .from('offered_positions')
+          .select('province')
+          .eq('province', sanitized)
+          .limit(1);
+        shouldValidate = true;
+        break;
+      case 'community':
+        // For communities, we need to check if any province in that community exists
+        // This is more complex, so we'll skip strict validation for now
+        // Communities are derived from provinces, so we trust the client selection
+        validationQuery = null;
+        shouldValidate = false;
+        break;
+    }
+
+    if (shouldValidate && validationQuery) {
+      try {
+        const { data: validationData, error: validationError } = await validationQuery;
+        
+        // Only enforce validation if the table has data
+        if (!validationError && validationData) {
+          if (validationData.length === 0) {
+            // Check if table is empty (no validation needed if empty)
+            const { count } = await supabaseAdmin
+              .from('offered_positions')
+              .select('*', { count: 'exact', head: true });
+            
+            if (count && count > 0) {
+              // Table has data but value not found - reject
+              return NextResponse.json(
+                { error: `El valor "${sanitized}" no existe en las posiciones ofertadas para el tipo "${preference_type}"` },
+                { status: 400 }
+              );
+            }
+            // Table is empty - allow insertion (fallback mode)
+            console.warn('offered_positions is empty - skipping validation');
+          }
+        }
+      } catch (validationErr) {
+        // If validation fails due to error, log and continue (don't block)
+        console.error('Validation error (continuing):', validationErr);
+      }
+    }
+
     // Create preference
     const { data, error } = await supabaseAdmin
       .from('preferences')
