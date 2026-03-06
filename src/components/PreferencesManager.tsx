@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/lib/store';
 import { supabase, Preference } from '@/lib/supabase';
 import { sanitizePreferenceValue, validatePreferenceType } from '@/lib/security';
@@ -14,15 +14,7 @@ export default function PreferencesManager() {
   const [error, setError] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (newPrefValue.length >= 2) {
-      loadSuggestions();
-    } else {
-      setSuggestions([]);
-    }
-  }, [newPrefValue, newPrefType]);
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     try {
       let query;
       const searchTerm = `%${newPrefValue}%`;
@@ -33,26 +25,35 @@ export default function PreferencesManager() {
           .select('center')
           .ilike('center', searchTerm)
           .limit(5);
-        setSuggestions([...new Set(data?.map(d => d.center) || [])]);
+        setSuggestions(Array.from(new Set(data?.map(d => d.center) || [])));
       } else if (newPrefType === 'province') {
         const { data } = await supabase
           .from('offered_positions')
           .select('province')
           .ilike('province', searchTerm)
           .limit(5);
-        setSuggestions([...new Set(data?.map(d => d.province) || [])]);
+        setSuggestions(Array.from(new Set(data?.map(d => d.province) || [])));
       } else {
         const { data } = await supabase
           .from('autonomous_communities')
           .select('community')
           .ilike('community', searchTerm)
           .limit(5);
-        setSuggestions([...new Set(data?.map(d => d.community) || [])]);
+        setSuggestions(Array.from(new Set(data?.map(d => d.community) || [])));
       }
     } catch (err) {
       console.error('Error loading suggestions:', err);
+      setSuggestions([]);
     }
-  };
+  }, [newPrefValue, newPrefType]);
+
+  useEffect(() => {
+    if (newPrefValue.length >= 2) {
+      loadSuggestions();
+    } else {
+      setSuggestions([]);
+    }
+  }, [newPrefValue, newPrefType, loadSuggestions]);
 
   const handleAddPreference = async () => {
     if (!dbUser || !newPrefValue.trim()) {
@@ -234,7 +235,7 @@ export default function PreferencesManager() {
           <div className="text-center py-8 text-gray-500">
             <p className="text-4xl mb-2">📋</p>
             <p>No has añadido preferencias todavía</p>
-            <p className="text-sm mt-1">Haz clic en "Añadir" para comenzar</p>
+            <p className="text-sm mt-1">Haz clic en &quot;Añadir&quot; para comenzar</p>
           </div>
         ) : (
           preferences.map((pref, idx) => (

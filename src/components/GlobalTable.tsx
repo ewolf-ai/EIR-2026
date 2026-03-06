@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { supabase, User, Preference } from '@/lib/supabase';
 
 interface UserWithPreferences {
@@ -13,11 +14,7 @@ export default function GlobalTable() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'position' | 'name'>('position');
 
-  useEffect(() => {
-    loadData();
-  }, [sortBy]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -50,7 +47,11 @@ export default function GlobalTable() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sortBy]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   if (loading) {
     return (
@@ -120,10 +121,12 @@ export default function GlobalTable() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {user.photo_url && (
-                        <img
+                        <Image
                           src={user.photo_url}
                           alt={user.display_name || 'User'}
-                          className="w-8 h-8 rounded-full"
+                          width={32}
+                          height={32}
+                          className="rounded-full"
                         />
                       )}
                       <span className="font-medium text-gray-800">

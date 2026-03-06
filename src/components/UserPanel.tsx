@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useAuthStore } from '@/lib/store';
 import { updateEIRPosition } from '@/lib/auth';
 import { validateEIRPosition } from '@/lib/security';
@@ -21,14 +22,7 @@ export default function UserPanel() {
   const [error, setError] = useState('');
   const [comparison, setComparison] = useState<ComparisonData | null>(null);
 
-  useEffect(() => {
-    if (dbUser?.eir_position) {
-      setPosition(dbUser.eir_position.toString());
-      loadComparison();
-    }
-  }, [dbUser?.eir_position, preferences]);
-
-  const loadComparison = async () => {
+  const loadComparison = useCallback(async () => {
     if (!dbUser?.eir_position || preferences.length === 0) return;
 
     try {
@@ -68,7 +62,14 @@ export default function UserPanel() {
     } catch (err) {
       console.error('Error loading comparison:', err);
     }
-  };
+  }, [dbUser, preferences]);
+
+  useEffect(() => {
+    if (dbUser?.eir_position) {
+      setPosition(dbUser.eir_position.toString());
+      loadComparison();
+    }
+  }, [dbUser?.eir_position, preferences, loadComparison]);
 
   const handleSavePosition = async () => {
     const posNum = parseInt(position);
@@ -99,10 +100,12 @@ export default function UserPanel() {
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
           {dbUser.photo_url && (
-            <img
+            <Image
               src={dbUser.photo_url}
               alt={dbUser.display_name || 'User'}
-              className="w-16 h-16 rounded-full border-4 border-white shadow-lg"
+              width={64}
+              height={64}
+              className="rounded-full border-4 border-white shadow-lg"
             />
           )}
           <div>
