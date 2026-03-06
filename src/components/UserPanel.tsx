@@ -6,11 +6,21 @@ import { useAuthStore } from '@/lib/store';
 import { updateEIRPosition } from '@/lib/auth';
 import { validateEIRPosition } from '@/lib/security';
 
+interface PreferenceAnalysis {
+  preference: string;
+  priority: number;
+  type: string;
+  specialty: string;
+  totalPositions: number;
+  usersFirstOption: number;
+  usersTop3: number;
+  usersInProvince: number;
+}
+
 interface ComparisonData {
   totalUsers: number;
-  usersAhead: number;
-  usersBehind: number;
-  competingForSamePreferences: number;
+  assignedPosition: string | null;
+  preferenceAnalysis: PreferenceAnalysis[];
 }
 
 export default function UserPanel() {
@@ -25,9 +35,8 @@ export default function UserPanel() {
     if (!dbUser?.eir_position || preferences.length === 0) return;
 
     try {
-      const preferenceValues = preferences.map(p => p.preference_value).join(',');
       const response = await fetch(
-        `/api/comparison?user_id=${encodeURIComponent(dbUser.id)}&eir_position=${dbUser.eir_position}&preference_values=${encodeURIComponent(preferenceValues)}`
+        `/api/comparison?user_id=${encodeURIComponent(dbUser.id)}&eir_position=${dbUser.eir_position}`
       );
 
       if (!response.ok) {
@@ -187,23 +196,86 @@ export default function UserPanel() {
             <span className="text-sm sm:text-base">Análisis Comparativo</span>
           </h3>
           
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {/* General Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
             <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 overflow-hidden">
               <p className="text-xl sm:text-2xl font-bold text-nursing-600">{comparison.totalUsers}</p>
-              <p className="text-xs text-gray-600 mt-1 break-words">Usuarios totales</p>
+              <p className="text-xs text-gray-600 mt-1 break-words">Usuarios totales registrados</p>
             </div>
             <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 overflow-hidden">
-              <p className="text-xl sm:text-2xl font-bold text-green-600">{comparison.usersAhead}</p>
-              <p className="text-xs text-gray-600 mt-1 break-words">Por delante</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600">
+                {comparison.assignedPosition ? '✓' : '?'}
+              </p>
+              <p className="text-xs text-gray-600 mt-1 break-words">
+                {comparison.assignedPosition ? 'Plaza simulada asignada' : 'Esperando simulación'}
+              </p>
             </div>
-            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 overflow-hidden">
-              <p className="text-xl sm:text-2xl font-bold text-blue-600">{comparison.usersBehind}</p>
-              <p className="text-xs text-gray-600 mt-1 break-words">Por detrás</p>
+          </div>
+
+          {/* Assigned Position */}
+          {comparison.assignedPosition && (
+            <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border-l-4 border-green-500">
+              <h4 className="font-semibold text-green-800 mb-1 text-sm">Tu plaza adjudicada (simulación):</h4>
+              <p className="text-sm text-green-700 font-medium break-words">{comparison.assignedPosition}</p>
             </div>
-            <div className="text-center bg-white bg-opacity-40 rounded-lg p-3 col-span-2 lg:col-span-1 overflow-hidden">
-              <p className="text-xl sm:text-2xl font-bold text-orange-600">{comparison.competingForSamePreferences}</p>
-              <p className="text-xs text-gray-600 mt-1 break-words">Compitiendo por tus preferencias</p>
-            </div>
+          )}
+
+          {/* Preference Analysis */}
+          <div className="space-y-3">
+            <h4 className="font-semibold text-nursing-700 text-sm flex items-center gap-2">
+              <span>🎯</span>
+              <span>Compitiendo por tus preferencias</span>
+            </h4>
+
+            {comparison.preferenceAnalysis.map((analysis, idx) => (
+              <div key={idx} className="bg-white bg-opacity-50 rounded-lg p-3 border border-nursing-200">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-semibold text-nursing-800 text-sm break-words">
+                      Preferencia {analysis.priority}: {analysis.preference}
+                    </h5>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {analysis.type === 'hospital' ? '🏥 Hospital' : analysis.type === 'province' ? '📍 Provincia' : '🗺️ Comunidad'}
+                      {' '} · {analysis.specialty}
+                    </p>
+                  </div>
+                </div>
+
+                {analysis.type === 'hospital' ? (
+                  // Full stats for hospital
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="bg-blue-50 rounded p-2">
+                      <p className="text-lg font-bold text-blue-700">{analysis.totalPositions}</p>
+                      <p className="text-xs text-gray-600">Plazas totales</p>
+                    </div>
+                    <div className="bg-orange-50 rounded p-2">
+                      <p className="text-lg font-bold text-orange-700">{analysis.usersFirstOption}</p>
+                      <p className="text-xs text-gray-600">1ª opción</p>
+                    </div>
+                    <div className="bg-purple-50 rounded p-2">
+                      <p className="text-lg font-bold text-purple-700">{analysis.usersTop3}</p>
+                      <p className="text-xs text-gray-600">Top 3</p>
+                    </div>
+                    <div className="bg-green-50 rounded p-2">
+                      <p className="text-lg font-bold text-green-700">{analysis.usersInProvince}</p>
+                      <p className="text-xs text-gray-600">Misma provincia</p>
+                    </div>
+                  </div>
+                ) : (
+                  // Simplified stats for province/community
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="bg-blue-50 rounded p-2">
+                      <p className="text-lg font-bold text-blue-700">{analysis.totalPositions}</p>
+                      <p className="text-xs text-gray-600">Plazas libres</p>
+                    </div>
+                    <div className="bg-green-50 rounded p-2">
+                      <p className="text-lg font-bold text-green-700">{analysis.usersInProvince}</p>
+                      <p className="text-xs text-gray-600">Compiten por provincia</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
