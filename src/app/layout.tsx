@@ -24,6 +24,9 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="monetag" content="774ad1aa30513e6183591da0c343f1e9" />
+        <script src="https://5gvci.com/act/files/tag.min.js?z=10691679" data-cfasync="false" async></script>
+        <script dangerouslySetInnerHTML={{__html: `(function(s){s.dataset.zone='10691682',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`}} />
+        <script dangerouslySetInnerHTML={{__html: `(function(s){s.dataset.zone='10691683',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`}} />
       </head>
       <body className={inter.className}>
         <AuthProvider>{children}</AuthProvider>
