@@ -96,6 +96,9 @@ export default function PreferencesManager() {
       setFilterText('');
       setShowDropdown(false);
       setIsAdding(false);
+      
+      // Refrescar la página para mostrar la preferencia en las tablas
+      window.location.reload();
     } catch (err: any) {
       setError(err.message || 'Error al añadir preferencia');
     } finally {
@@ -238,7 +241,7 @@ export default function PreferencesManager() {
                       setFilterText(option);
                       setShowDropdown(false);
                     }}
-                    className={`w-full px-3 py-2 text-left hover:bg-pastel-pink hover:bg-opacity-30 transition-colors text-sm ${
+                    className={`w-full px-3 py-2 text-left hover:bg-pastel-pink hover:bg-opacity-30 transition-all duration-75 text-sm ${
                       option === newPrefValue ? 'bg-nursing-100' : ''
                     }`}
                   >
@@ -310,20 +313,20 @@ export default function PreferencesManager() {
           preferences.map((pref, idx) => (
             <div
               key={pref.id}
-              className="flex items-center gap-3 p-3 bg-pastel-blue bg-opacity-20 rounded-lg group hover:bg-opacity-40 transition-colors"
+              className="flex items-center gap-3 p-3 bg-pastel-blue bg-opacity-20 rounded-lg group hover:bg-opacity-40 transition-all duration-100"
             >
               <div className="flex flex-col gap-1">
                 <button
                   onClick={() => idx > 0 && handleReorder(idx, idx - 1)}
                   disabled={idx === 0}
-                  className="text-nursing-600 hover:text-nursing-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="text-nursing-600 hover:text-nursing-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-100"
                 >
                   ▲
                 </button>
                 <button
                   onClick={() => idx < preferences.length - 1 && handleReorder(idx, idx + 1)}
                   disabled={idx === preferences.length - 1}
-                  className="text-nursing-600 hover:text-nursing-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="text-nursing-600 hover:text-nursing-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-100"
                 >
                   ▼
                 </button>
@@ -346,7 +349,7 @@ export default function PreferencesManager() {
 
               <button
                 onClick={() => handleRemovePreference(pref.id)}
-                className="opacity-0 group-hover:opacity-100 px-3 py-1 text-red-600 hover:bg-red-50 rounded transition-all"
+                className="opacity-0 group-hover:opacity-100 px-3 py-1 text-red-600 hover:bg-red-50 rounded transition-all duration-100"
               >
                 ✕
               </button>
