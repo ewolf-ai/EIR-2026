@@ -5,11 +5,15 @@ import UserPanel from './UserPanel';
 import PreferencesManager from './PreferencesManager';
 import GlobalTable from './GlobalTable';
 import AdBanner from './AdBanner';
+import SocialBar from './SocialBar';
 
 export default function Dashboard() {
   return (
     <div className="min-h-screen overflow-x-hidden">
       <Header />
+      
+      {/* Social Bar */}
+      <SocialBar className="py-2" />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Welcome Section */}
@@ -100,6 +104,9 @@ export default function Dashboard() {
 
         {/* Advertisement */}
         <AdBanner />
+        
+        {/* Social Bar */}
+        <SocialBar className="mt-6" />
 
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-gray-500 pb-6 sm:pb-8">
