@@ -24,7 +24,7 @@ export default function AdSidebar({ className = '' }: AdSidebarProps) {
         adScript.type = 'text/javascript';
         adScript.async = true;
         adScript.setAttribute('data-cfasync', 'false');
-        adScript.src = '//pl28853919.effectivegatecpm.com/de/f6/46/def646c778819384e9f60709b2fa20e6.js';
+        adScript.src = 'https://pl28853919.effectivegatecpm.com/de/f6/46/def646c778819384e9f60709b2fa20e6.js';
         
         adRef.current.appendChild(adContainer);
         adRef.current.appendChild(adScript);

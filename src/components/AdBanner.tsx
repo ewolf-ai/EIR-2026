@@ -24,7 +24,7 @@ export default function AdBanner({ className = '' }: AdBannerProps) {
         invokeScript.type = 'text/javascript';
         invokeScript.async = true;
         invokeScript.setAttribute('data-cfasync', 'false');
-        invokeScript.src = '//www.highperformanceformat.com/ab7bf4e790396ec2699667b25edf831f/invoke.js';
+        invokeScript.src = 'https://www.highperformanceformat.com/ab7bf4e790396ec2699667b25edf831f/invoke.js';
         
         adRef.current.appendChild(adContainer);
         adRef.current.appendChild(invokeScript);
