@@ -103,15 +103,21 @@ export default function UserPanel() {
       if (showRefreshing) setRefreshing(true);
       
       const response = await fetch(
-        `/api/comparison?user_id=${encodeURIComponent(dbUser.id)}&eir_position=${dbUser.eir_position}`
+        `/api/comparison?user_id=${encodeURIComponent(dbUser.id)}`
       );
 
       if (!response.ok) {
         throw new Error('Failed to fetch comparison');
       }
 
-      const { data } = await response.json();
+      const responseData = await response.json();
+      const { data, debug } = responseData;
       setComparison(data);
+      
+      // Log debug info to console for troubleshooting
+      if (debug) {
+        console.log('🔍 DEBUG INFO:', debug);
+      }
     } catch (err) {
       console.error('Error loading comparison:', err);
     } finally {
