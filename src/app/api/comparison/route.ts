@@ -42,16 +42,13 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('user_id');
-    const eirPosition = searchParams.get('eir_position');
 
-    if (!userId || !eirPosition) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'Missing user_id or eir_position parameter' },
+        { error: 'Missing user_id parameter' },
         { status: 400 }
       );
     }
-
-    const userPosition = parseInt(eirPosition);
 
     // Get total users with positions
     const { count: totalUsers } = await supabaseAdmin
@@ -73,8 +70,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (!currentUser.eir_position) {
+      return NextResponse.json({
+        data: {
+          totalUsers: totalUsers || 0,
+          assignedPosition: null,
+          assignmentCalculatedAt: null,
+          preferenceAnalysis: [],
+        },
+      });
+    }
+
+    const userPosition = currentUser.eir_position;
+
     // Get current user's preferences
-    const { data: userPreferences } = await supabaseAdmin
+    const { data: userPreferences, error: prefsError } = await supabaseAdmin
       .from('preferences')
       .select('preference_value, preference_type, specialty, priority')
       .eq('user_id', userId)
@@ -91,18 +101,40 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get all users with their positions (for statistics)
-    const { data: allUsers } = await supabaseAdmin
+    // Get all users with their positions and their preferences in one query using JOIN
+    // This is much more efficient than separate queries
+    const { data: usersWithPreferences, error: usersError } = await supabaseAdmin
       .from('users')
-      .select('id, eir_position')
+      .select(`
+        id, 
+        eir_position,
+        preferences (
+          user_id,
+          preference_value,
+          preference_type,
+          specialty,
+          priority
+        )
+      `)
       .not('eir_position', 'is', null)
+      .lt('eir_position', userPosition) // Only users ahead
       .order('eir_position');
 
-    // Get all preferences for statistics
-    const { data: allPreferences } = await supabaseAdmin
-      .from('preferences')
-      .select('user_id, preference_value, preference_type, specialty, priority')
-      .order('priority');
+    // Extract users and build preference map
+    const allUsers = usersWithPreferences?.map((u: any) => ({
+      id: u.id,
+      eir_position: u.eir_position
+    })) || [];
+
+    // Build all preferences array from the nested data
+    const allPreferences: any[] = [];
+    if (usersWithPreferences) {
+      for (const user of usersWithPreferences) {
+        if (user.preferences && Array.isArray(user.preferences)) {
+          allPreferences.push(...user.preferences);
+        }
+      }
+    }
 
     // Get all offered positions for statistics
     const { data: offeredPositions } = await supabaseAdmin
@@ -134,6 +166,11 @@ export async function GET(request: NextRequest) {
           priority: pref.priority,
         });
       }
+      
+      // CRITICAL: Sort each user's preferences by priority to ensure "top 3" is accurate
+      userPreferenceMap.forEach((prefs, userId) => {
+        prefs.sort((a: any, b: any) => a.priority - b.priority);
+      });
     }
 
     // Analyze each user preference
@@ -175,6 +212,7 @@ export async function GET(request: NextRequest) {
       if (allUsers) {
         for (const user of allUsers) {
           if (user.eir_position >= userPosition) break; // Only count users ahead
+          
           const prefs = userPreferenceMap.get(user.id) || [];
           if (prefs.length === 0) continue;
 

@@ -103,7 +103,7 @@ export default function UserPanel() {
       if (showRefreshing) setRefreshing(true);
       
       const response = await fetch(
-        `/api/comparison?user_id=${encodeURIComponent(dbUser.id)}&eir_position=${dbUser.eir_position}`
+        `/api/comparison?user_id=${encodeURIComponent(dbUser.id)}`
       );
 
       if (!response.ok) {

@@ -16,6 +16,7 @@ export default function GlobalTable() {
   const [sortBy, setSortBy] = useState<'position' | 'name'>('position');
   const [itemsPerPage, setItemsPerPage] = useState<number>(50);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [expandedPreferences, setExpandedPreferences] = useState<Record<string, number>>({});
 
   const loadData = useCallback(async () => {
     try {
@@ -28,6 +29,17 @@ export default function GlobalTable() {
       }
 
       const { data: combined } = await response.json();
+      
+      // Debug logging
+      const user344 = combined?.find((item: any) => item.user.eir_position === 344);
+      if (user344) {
+        console.log('🔍 User 344 data:', {
+          position: user344.user.eir_position,
+          preferencesCount: user344.preferences?.length,
+          preferences: user344.preferences
+        });
+      }
+      
       setData(combined || []);
     } catch (err) {
       console.error('Error loading global data:', err);
@@ -44,6 +56,19 @@ export default function GlobalTable() {
   useEffect(() => {
     setCurrentPage(1);
   }, [itemsPerPage]);
+
+  // Helper function to get visible preferences count for a user (default: 3)
+  const getVisiblePrefsCount = (userId: string) => {
+    return expandedPreferences[userId] || 3;
+  };
+
+  // Helper function to expand preferences for a user
+  const expandPreferences = (userId: string, currentCount: number) => {
+    setExpandedPreferences(prev => ({
+      ...prev,
+      [userId]: currentCount + 3
+    }));
+  };
 
   // Calculate pagination
   const totalPages = Math.ceil(data.length / itemsPerPage);
@@ -139,24 +164,28 @@ export default function GlobalTable() {
                       <span className="text-gray-400 text-sm italic">Sin preferencias</span>
                     ) : (
                       <div className="space-y-1.5">
-                        {preferences.slice(0, 3).map((pref, idx) => (
-                          <div key={pref.id} className="text-sm bg-white bg-opacity-60 rounded px-2 py-1">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <span className="text-nursing-600 font-bold">{idx + 1}.</span>
-                              <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${getSpecialtyInfo(pref.specialty).bgColor} ${getSpecialtyInfo(pref.specialty).color}`}>
-                                {getSpecialtyInfo(pref.specialty).shortName}
+                        {preferences.slice(0, getVisiblePrefsCount(user.id)).map((pref, idx) => (
+                            <div key={pref.id} className="text-sm bg-white bg-opacity-60 rounded px-2 py-1">
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <span className="text-nursing-600 font-bold">{idx + 1}.</span>
+                                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${getSpecialtyInfo(pref.specialty).bgColor} ${getSpecialtyInfo(pref.specialty).color}`}>
+                                  {getSpecialtyInfo(pref.specialty).shortName}
+                                </span>
+                              </div>
+                              <span className="text-gray-800">{pref.preference_value}</span>
+                              <span className="text-gray-500 text-xs ml-1">
+                                ({pref.preference_type === 'hospital' ? 'hospital' : pref.preference_type === 'province' ? 'provincia' : 'comunidad'})
                               </span>
                             </div>
-                            <span className="text-gray-800">{pref.preference_value}</span>
-                            <span className="text-gray-500 text-xs ml-1">
-                              ({pref.preference_type === 'hospital' ? 'hospital' : pref.preference_type === 'province' ? 'provincia' : 'comunidad'})
-                            </span>
-                          </div>
                         ))}
-                        {preferences.length > 3 && (
-                          <p className="text-xs text-gray-500 italic pl-2">
-                            +{preferences.length - 3} más
-                          </p>
+                        {preferences.length > getVisiblePrefsCount(user.id) && (
+                          <button
+                            onClick={() => expandPreferences(user.id, getVisiblePrefsCount(user.id))}
+                            className="text-xs font-medium text-nursing-600 hover:text-nursing-700 bg-nursing-100 hover:bg-nursing-200 px-3 py-1.5 rounded-lg transition-colors w-full flex items-center justify-center gap-1 mt-1"
+                          >
+                            <span>Ver más</span>
+                            <span className="text-gray-500">({preferences.length - getVisiblePrefsCount(user.id)} restantes)</span>
+                          </button>
                         )}
                       </div>
                     )}
@@ -202,24 +231,39 @@ export default function GlobalTable() {
                       <span className="text-gray-400 text-sm italic">Sin preferencias</span>
                     ) : (
                       <div className="space-y-1">
-                        {preferences.slice(0, 3).map((pref, idx) => (
-                          <div key={pref.id} className="text-sm">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-nursing-600 font-semibold">{idx + 1}.</span>
-                              <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${getSpecialtyInfo(pref.specialty).bgColor} ${getSpecialtyInfo(pref.specialty).color}`}>
-                                {getSpecialtyInfo(pref.specialty).shortName}
+                        {(() => {
+                          const visibleCount = getVisiblePrefsCount(user.id);
+                          const visiblePrefs = preferences.slice(0, visibleCount);
+                          if (user.eir_position === 344) {
+                            console.log('🖥️ Rendering desktop user 344:', {
+                              totalPrefs: preferences.length,
+                              visibleCount,
+                              visiblePrefs: visiblePrefs.length
+                            });
+                          }
+                          return visiblePrefs.map((pref, idx) => (
+                            <div key={pref.id} className="text-sm">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-nursing-600 font-semibold">{idx + 1}.</span>
+                                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${getSpecialtyInfo(pref.specialty).bgColor} ${getSpecialtyInfo(pref.specialty).color}`}>
+                                  {getSpecialtyInfo(pref.specialty).shortName}
+                                </span>
+                              </div>
+                              <span className="text-gray-700 ml-5">{pref.preference_value}</span>
+                              <span className="text-gray-400 text-xs ml-1">
+                                ({pref.preference_type === 'hospital' ? 'hospital' : pref.preference_type === 'province' ? 'provincia' : 'comunidad'})
                               </span>
                             </div>
-                            <span className="text-gray-700 ml-5">{pref.preference_value}</span>
-                            <span className="text-gray-400 text-xs ml-1">
-                              ({pref.preference_type === 'hospital' ? 'hospital' : pref.preference_type === 'province' ? 'provincia' : 'comunidad'})
-                            </span>
-                          </div>
-                        ))}
-                        {preferences.length > 3 && (
-                          <p className="text-xs text-gray-400">
-                            +{preferences.length - 3} más
-                          </p>
+                          ));
+                        })()}
+                        {preferences.length > getVisiblePrefsCount(user.id) && (
+                          <button
+                            onClick={() => expandPreferences(user.id, getVisiblePrefsCount(user.id))}
+                            className="text-xs font-medium text-nursing-600 hover:text-nursing-700 bg-nursing-100 hover:bg-nursing-200 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1 mt-1"
+                          >
+                            <span>Ver más</span>
+                            <span className="text-gray-500">({preferences.length - getVisiblePrefsCount(user.id)} restantes)</span>
+                          </button>
                         )}
                       </div>
                     )}
