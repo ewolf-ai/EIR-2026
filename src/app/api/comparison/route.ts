@@ -96,12 +96,14 @@ export async function GET(request: NextRequest) {
       .from('users')
       .select('id, eir_position')
       .not('eir_position', 'is', null)
+      .lt('eir_position', userPosition) // Only users ahead
       .order('eir_position');
 
-    // Get all preferences for statistics
+    // Get preferences only for users ahead (optimization)
     const { data: allPreferences } = await supabaseAdmin
       .from('preferences')
       .select('user_id, preference_value, preference_type, specialty, priority')
+      .in('user_id', allUsers?.map(u => u.id) || [])
       .order('priority');
 
     // Get all offered positions for statistics
