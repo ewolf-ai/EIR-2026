@@ -23,7 +23,8 @@ BEGIN
   -- Step 1: Clear all existing assignments
   UPDATE users 
   SET assigned_position_simulation = NULL,
-      assignment_calculated_at = calc_timestamp;
+      assignment_calculated_at = calc_timestamp
+  WHERE TRUE; -- Required by Supabase: explicit WHERE clause
   
   -- Step 2: Create temporary table for available positions
   -- This acts as our in-memory counter during the simulation
@@ -34,7 +35,7 @@ BEGIN
     PRIMARY KEY (center, specialty)
   );
   
-  DELETE FROM temp_available_positions;
+  DELETE FROM temp_available_positions WHERE TRUE; -- Required by Supabase
   
   -- Initialize available positions from offered_positions
   INSERT INTO temp_available_positions (center, specialty, available_count)

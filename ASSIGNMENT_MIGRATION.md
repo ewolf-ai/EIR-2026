@@ -233,10 +233,16 @@ SELECT assignment_calculated_at FROM users LIMIT 1;
 **Solución:** Re-ejecutar `scripts/recalculate-assignments-function.sql`
 
 ### Problema: "Relation province_community_mapping does not exist"
-**Solución:** Ejecutar `scripts/create-province-community-mapping.sql`
+**Solución:** Tu BD ya tiene `autonomous_communities`, no necesitas este script
 
 ### Problema: Los triggers no se activan
-**Solución:** 
+**Solución (Supabase):** 
+```sql
+-- Ejecutar el script específico para Supabase
+\i scripts/fix-triggers-supabase.sql
+```
+
+**Solución (PostgreSQL genérico):**
 ```sql
 -- Verificar que existen
 SELECT * FROM pg_trigger WHERE tgname LIKE '%recalc%';

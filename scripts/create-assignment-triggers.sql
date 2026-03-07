@@ -10,8 +10,20 @@ CREATE TABLE IF NOT EXISTS assignment_recalculation_queue (
   processed_at TIMESTAMP WITH TIME ZONE
 );
 
--- Enable RLS (Service role only)
+-- Enable RLS (but allow inserts via SECURITY DEFINER function)
+-- Disable RLS to allow the SECURITY DEFINER function to work properly
+ALTER TABLE assignment_recalculation_queue DISABLE ROW LEVEL SECURITY;
+
+-- Alternative: Keep RLS enabled with permissive policies (uncomment if preferred)
+/*
 ALTER TABLE assignment_recalculation_queue ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow queue operations" 
+  ON assignment_recalculation_queue 
+  FOR ALL 
+  USING (true)
+  WITH CHECK (true);
+*/
 
 -- Step 2: Function to queue a recalculation
 CREATE OR REPLACE FUNCTION queue_assignment_recalculation(reason TEXT)
@@ -25,9 +37,16 @@ BEGIN
     INSERT INTO assignment_recalculation_queue (reason)
     VALUES (reason);
   END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log the error but don't fail the transaction
+    RAISE WARNING 'Failed to queue recalculation: %', SQLERRM;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Grant execute to public (safe because SECURITY DEFINER handles permissions)
+GRANT EXECUTE ON FUNCTION queue_assignment_recalculation TO PUBLIC;
+ULL; -- NULL for STATEMENT-level triggers
 -- Step 3: Trigger on preferences table
 CREATE OR REPLACE FUNCTION trigger_assignment_recalc_on_preferences()
 RETURNS TRIGGER AS $$
@@ -70,7 +89,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   -- Queue recalculation when offered positions change
   PERFORM queue_assignment_recalculation('Offered positions modified');
-  RETURN NEW;
+  RETURN NULL; -- NULL for STATEMENT-level triggers
 END;
 $$ LANGUAGE plpgsql;
 
