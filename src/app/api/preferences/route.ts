@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { sanitizePreferenceValue, validatePreferenceType, validateSpecialty } from '@/lib/security';
 
+// Helper function to trigger assignment recalculation
+async function triggerRecalculation() {
+  console.log('🔄 [RECALC] Triggering assignment recalculation...');
+  try {
+    // Call the recalculation queue processor
+    const { data, error } = await supabaseAdmin
+      .rpc('process_assignment_recalculation_queue');
+    
+    if (error) {
+      console.error('❌ [RECALC] Failed to trigger recalculation:', error);
+      // Don't throw - this is non-critical
+    } else {
+      console.log('✅ [RECALC] Success:', data);
+    }
+  } catch (err) {
+    console.error('❌ [RECALC] Error triggering recalculation:', err);
+    // Silently fail - preference change should still succeed
+  }
+}
+
 // GET - Get user preferences
 export async function GET(request: NextRequest) {
   try {
@@ -159,6 +179,9 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // Trigger recalculation asynchronously
+    await triggerRecalculation();
+
     return NextResponse.json({ data }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating preference:', error);
@@ -188,6 +211,9 @@ export async function DELETE(request: NextRequest) {
       .eq('id', id);
 
     if (error) throw error;
+
+    // Trigger recalculation asynchronously
+    await triggerRecalculation();
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -243,6 +269,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     console.log('All preferences updated successfully');
+    
+    // Trigger recalculation asynchronously
+    await triggerRecalculation();
+    
     return NextResponse.json({ success: true, updated: preferences.length });
   } catch (error: any) {
     console.error('Error updating preferences:', error);
@@ -284,6 +314,9 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // Trigger recalculation asynchronously
+    await triggerRecalculation();
 
     return NextResponse.json({ data }, { status: 200 });
   } catch (error: any) {

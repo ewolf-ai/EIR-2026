@@ -102,8 +102,10 @@ export default function PreferencesManager() {
       setShowDropdown(false);
       setIsAdding(false);
       
-      // Refrescar la página para mostrar la preferencia en las tablas
-      window.location.reload();
+      // Trigger assignment refresh
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('preferences-updated'));
+      }, 1500);
     } catch (err: any) {
       setError(err.message || 'Error al añadir preferencia');
     } finally {
@@ -140,6 +142,11 @@ export default function PreferencesManager() {
       });
 
       setPreferences(updatedPrefs);
+      
+      // Trigger assignment refresh
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('preferences-updated'));
+      }, 1500);
     } catch (err: any) {
       alert('Error al eliminar preferencia: ' + err.message);
     }
@@ -163,6 +170,11 @@ export default function PreferencesManager() {
       
       setPreferences(updatedPrefs);
       setEditingId(null);
+      
+      // Trigger assignment refresh
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('preferences-updated'));
+      }, 1500);
     } catch (err: any) {
       alert('Error al actualizar especialidad: ' + err.message);
     }
@@ -207,6 +219,12 @@ export default function PreferencesManager() {
 
       // Success - the UI is already updated
       console.log('Orden guardado correctamente');
+      
+      // Trigger assignment refresh after short delay (to allow backend processing)
+      // Dispatch custom event to notify UserPanel to refresh
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('preferences-updated'));
+      }, 1500); // Wait 1.5s for recalculation to complete
     } catch (err: any) {
       console.error('Error al reordenar preferencias:', err);
       // Rollback to original state

@@ -20,6 +20,7 @@ interface PreferenceAnalysis {
 interface ComparisonData {
   totalUsers: number;
   assignedPosition: string | null;
+  assignmentCalculatedAt: string | null;
   preferenceAnalysis: PreferenceAnalysis[];
 }
 
@@ -93,11 +94,14 @@ export default function UserPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [comparison, setComparison] = useState<ComparisonData | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const loadComparison = useCallback(async () => {
+  const loadComparison = useCallback(async (showRefreshing = false) => {
     if (!dbUser?.eir_position || preferences.length === 0) return;
 
     try {
+      if (showRefreshing) setRefreshing(true);
+      
       const response = await fetch(
         `/api/comparison?user_id=${encodeURIComponent(dbUser.id)}&eir_position=${dbUser.eir_position}`
       );
@@ -110,6 +114,11 @@ export default function UserPanel() {
       setComparison(data);
     } catch (err) {
       console.error('Error loading comparison:', err);
+    } finally {
+      if (showRefreshing) {
+        // Keep refreshing indicator for a bit longer for visual feedback
+        setTimeout(() => setRefreshing(false), 500);
+      }
     }
   }, [dbUser, preferences]);
 
@@ -119,6 +128,17 @@ export default function UserPanel() {
       loadComparison();
     }
   }, [dbUser?.eir_position, preferences, loadComparison]);
+
+  // Listen for preference updates to refresh assignment
+  useEffect(() => {
+    const handlePreferencesUpdated = () => {
+      console.log('🔄 Preferences updated, refreshing assignment...');
+      loadComparison(true);
+    };
+
+    window.addEventListener('preferences-updated', handlePreferencesUpdated);
+    return () => window.removeEventListener('preferences-updated', handlePreferencesUpdated);
+  }, [loadComparison]);
 
   const handleSavePosition = async () => {
     const posNum = parseInt(position);
@@ -285,6 +305,11 @@ export default function UserPanel() {
               <h4 className="font-semibold text-green-800 mb-1 text-sm flex items-center gap-2">
                 Tu plaza adjudicada (simulación):
                 <InfoTooltip text="Asignación realizada según posición y preferencias de los usuarios registrados. *Tus plazas preferidas pueden no estar disponibles si los usuarios con mejor posición que tú la han seleccionado y cubren todas las plazas ofertadas" />
+                {refreshing && (
+                  <span className="ml-2 text-xs text-green-600 animate-pulse">
+                    🔄 Actualizando...
+                  </span>
+                )}
               </h4>
               <p className="text-sm text-green-700 font-medium break-words">{comparison.assignedPosition}</p>
             </div>
@@ -296,6 +321,11 @@ export default function UserPanel() {
               <h4 className="font-semibold text-red-800 mb-1 text-sm flex items-center gap-1">
                 <span>⚠️</span>
                 <span>Sin plaza adjudicada (simulación)</span>
+                {refreshing && (
+                  <span className="ml-2 text-xs text-red-600 animate-pulse">
+                    🔄 Actualizando...
+                  </span>
+                )}
               </h4>
               <p className="text-xs text-red-700 leading-relaxed">
                 Según la simulación con las preferencias actuales, no obtendrías plaza. Esto puede deberse a que todas tus preferencias ya están ocupadas por usuarios con mejor posición.

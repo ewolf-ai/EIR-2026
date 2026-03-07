@@ -2,17 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { PROVINCE_TO_COMMUNITY } from '@/lib/eir-data';
 
-interface PreferenceAnalysis {
-  preference: string;
-  priority: number;
-  type: string;
-  specialty: string;
-  totalPositions: number;
-  usersFirstOption: number;
-  usersTop3: number;
-  usersInProvince: number;
-}
-
 interface UserWithPreferences {
   id: string;
   eir_position: number;
@@ -22,6 +11,17 @@ interface UserWithPreferences {
     specialty: string;
     priority: number;
   }>;
+}
+
+interface PreferenceAnalysis {
+  preference: string;
+  priority: number;
+  type: string;
+  specialty: string;
+  totalPositions: number;
+  usersFirstOption: number;
+  usersTop3: number;
+  usersInProvince: number;
 }
 
 // Helper function to get province from preference
@@ -59,20 +59,6 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .not('eir_position', 'is', null);
 
-    // Get current user's data including assigned position from DB
-    const { data: currentUser, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('id, eir_position, assigned_position_simulation, assignment_calculated_at')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !currentUser) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
     // Get current user's preferences
     const { data: userPreferences } = await supabaseAdmin
       .from('preferences')
@@ -84,27 +70,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         data: {
           totalUsers: totalUsers || 0,
-          assignedPosition: currentUser.assigned_position_simulation,
-          assignmentCalculatedAt: currentUser.assignment_calculated_at,
+          assignedPosition: null,
           preferenceAnalysis: [],
         },
       });
     }
 
-    // Get all users with their positions (for statistics)
+    // Get all users with their positions and preferences (only users with position)
     const { data: allUsers } = await supabaseAdmin
       .from('users')
       .select('id, eir_position')
       .not('eir_position', 'is', null)
       .order('eir_position');
 
-    // Get all preferences for statistics
+    // Get all preferences for all users
     const { data: allPreferences } = await supabaseAdmin
       .from('preferences')
       .select('user_id, preference_value, preference_type, specialty, priority')
       .order('priority');
 
-    // Get all offered positions for statistics
+    // Get all offered positions to build hospital->province mapping
     const { data: offeredPositions } = await supabaseAdmin
       .from('offered_positions')
       .select('center, province, specialty, num_positions');
@@ -135,6 +120,83 @@ export async function GET(request: NextRequest) {
         });
       }
     }
+
+    // Simulate REALISTIC assignment process
+    const assignedPositions = new Map<string, string>(); // userId -> assigned preference_value
+    const availablePositions = new Map<string, number>(); // key: center_specialty -> available count
+    
+    // Initialize available positions from offered_positions
+    if (offeredPositions) {
+      for (const pos of offeredPositions) {
+        const key = `${pos.center}_${pos.specialty}`;
+        availablePositions.set(key, (availablePositions.get(key) || 0) + pos.num_positions);
+      }
+    }
+
+    // Process users in order of eir_position (best to worst)
+    if (allUsers) {
+      for (const user of allUsers) {
+        const prefs = userPreferenceMap.get(user.id) || [];
+        let assigned = false;
+
+        // Try each preference in order
+        for (const pref of prefs) {
+          if (assigned) break;
+
+          if (pref.preference_type === 'hospital') {
+            // Try to assign to specific hospital
+            const key = `${pref.preference_value}_${pref.specialty}`;
+            const available = availablePositions.get(key) || 0;
+            
+            if (available > 0) {
+              assignedPositions.set(user.id, pref.preference_value);
+              availablePositions.set(key, available - 1);
+              assigned = true;
+            }
+          } else if (pref.preference_type === 'province') {
+            // Try to assign to any center in this province
+            const centersInProvince = offeredPositions?.filter(
+              p => p.province === pref.preference_value && p.specialty === pref.specialty
+            ) || [];
+
+            for (const center of centersInProvince) {
+              const key = `${center.center}_${pref.specialty}`;
+              const available = availablePositions.get(key) || 0;
+              
+              if (available > 0) {
+                assignedPositions.set(user.id, center.center);
+                availablePositions.set(key, available - 1);
+                assigned = true;
+                break;
+              }
+            }
+          } else if (pref.preference_type === 'community') {
+            // Try to assign to any center in provinces of this community
+            const provincesInCommunity = PROVINCE_TO_COMMUNITY
+              .filter(p => p.community === pref.preference_value)
+              .map(p => p.province);
+
+            const centersInCommunity = offeredPositions?.filter(
+              p => provincesInCommunity.includes(p.province) && p.specialty === pref.specialty
+            ) || [];
+
+            for (const center of centersInCommunity) {
+              const key = `${center.center}_${pref.specialty}`;
+              const available = availablePositions.get(key) || 0;
+              
+              if (available > 0) {
+                assignedPositions.set(user.id, center.center);
+                availablePositions.set(key, available - 1);
+                assigned = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const userAssignedPosition = assignedPositions.get(userId) || null;
 
     // Analyze each user preference
     const preferenceAnalysis: PreferenceAnalysis[] = [];
@@ -267,6 +329,9 @@ export async function GET(request: NextRequest) {
       }
 
       // Count users competing for same province using SQL query
+      // Uses PostgreSQL function that executes: 
+      // SELECT * FROM preferences WHERE specialty = X AND preference_value IN 
+      //   (SELECT province FROM offered_positions WHERE province = Y UNION SELECT center FROM offered_positions WHERE province = Y)
       let usersInProvince = 0;
       
       if (userPref.preference_type === 'hospital' && provinceForPreference) {
@@ -349,8 +414,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: {
         totalUsers: totalUsers || 0,
-        assignedPosition: currentUser.assigned_position_simulation,
-        assignmentCalculatedAt: currentUser.assignment_calculated_at,
+        assignedPosition: userAssignedPosition,
         preferenceAnalysis,
       },
     });
