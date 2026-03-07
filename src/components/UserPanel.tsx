@@ -110,14 +110,8 @@ export default function UserPanel() {
         throw new Error('Failed to fetch comparison');
       }
 
-      const responseData = await response.json();
-      const { data, debug } = responseData;
+      const { data } = await response.json();
       setComparison(data);
-      
-      // Log debug info to console for troubleshooting
-      if (debug) {
-        console.log('🔍 DEBUG INFO:', debug);
-      }
     } catch (err) {
       console.error('Error loading comparison:', err);
     } finally {

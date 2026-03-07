@@ -384,47 +384,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Debug: Log analysis results
-    console.log('📊 Preference Analysis Summary:');
-    preferenceAnalysis.forEach(pa => {
-      console.log(`  ${pa.preference}: 1st=${pa.usersFirstOption}, Top3=${pa.usersTop3}, Province=${pa.usersInProvince}`);
-    });
-
     return NextResponse.json({
       data: {
         totalUsers: totalUsers || 0,
         assignedPosition: currentUser.assigned_position_simulation,
         assignmentCalculatedAt: currentUser.assignment_calculated_at,
         preferenceAnalysis,
-      },
-      debug: {
-        userPosition,
-        allUsersCount: allUsers?.length || 0,
-        allPreferencesCount: allPreferences?.length || 0,
-        userPreferencesCount: userPreferences?.length || 0,
-        sampleUsers: allUsers?.slice(0, 10).map((u: any) => ({ id: u.id, position: u.eir_position })),
-        userPrefs: userPreferences?.map((p: any) => ({
-          value: p.preference_value,
-          type: p.preference_type,
-          specialty: p.specialty,
-          priority: p.priority
-        })),
-        sampleOtherPrefs: allPreferences?.slice(0, 10).map((p: any) => ({
-          userId: p.user_id,
-          value: p.preference_value,
-          type: p.preference_type,
-          specialty: p.specialty,
-          priority: p.priority
-        })),
-        // Show top 3 of a few users to verify sorting
-        sampleUserTop3s: Array.from(userPreferenceMap).slice(0, 5).map(([userId, prefs]) => ({
-          userId,
-          top3: prefs.slice(0, 3).map((p: any) => ({
-            priority: p.priority,
-            value: p.preference_value,
-            specialty: p.specialty
-          }))
-        }))
       },
     });
   } catch (error: any) {
