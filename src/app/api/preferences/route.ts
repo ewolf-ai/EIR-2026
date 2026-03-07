@@ -43,6 +43,14 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
+    // Debug for user 344
+    if (userId === 'a611feaa-0f9b-42a8-8d27-bc45e89ff7f4') {
+      console.log('🔍 /api/preferences for user 344:', {
+        count: data?.length,
+        preferences: data?.map(p => ({ id: p.id, priority: p.priority, value: p.preference_value }))
+      });
+    }
+
     return NextResponse.json({ data: data || [] });
   } catch (error: any) {
     console.error('Error fetching preferences:', error);

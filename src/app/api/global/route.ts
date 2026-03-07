@@ -16,19 +16,23 @@ export async function GET(request: NextRequest) {
 
     if (usersError) throw usersError;
 
-    // Get all preferences
-    const { data: prefs, error: prefsError } = await supabaseAdmin
-      .from('preferences')
-      .select('*')
-      .order('priority', { ascending: true });
+    // Fetch preferences for each user individually to avoid Supabase limits
+    const combined = await Promise.all(
+      (users || []).map(async (user) => {
+        const { data: preferences, error: prefError } = await supabaseAdmin
+          .from('preferences')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('priority', { ascending: true });
 
-    if (prefsError) throw prefsError;
+        if (prefError) {
+          console.error(`Error fetching preferences for user ${user.id}:`, prefError);
+          return { user, preferences: [] };
+        }
 
-    // Combine data
-    const combined = users?.map(user => ({
-      user,
-      preferences: prefs?.filter(p => p.user_id === user.id) || [],
-    })) || [];
+        return { user, preferences: preferences || [] };
+      })
+    );
 
     return NextResponse.json({ data: combined });
   } catch (error: any) {
