@@ -20,6 +20,7 @@ interface PreferenceAnalysis {
 interface ComparisonData {
   totalUsers: number;
   assignedPosition: string | null;
+  assignmentCalculatedAt: string | null;
   preferenceAnalysis: PreferenceAnalysis[];
 }
 
