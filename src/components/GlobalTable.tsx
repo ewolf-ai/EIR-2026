@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { User, Preference } from '@/lib/supabase';
 import { getSpecialtyInfo } from '@/lib/specialties';
@@ -12,50 +12,55 @@ interface UserWithPreferences {
 
 export default function GlobalTable() {
   const [data, setData] = useState<UserWithPreferences[]>([]);
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'position' | 'name'>('position');
   const [itemsPerPage, setItemsPerPage] = useState<number>(50);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [expandedPreferences, setExpandedPreferences] = useState<Record<string, number>>({});
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      const response = await fetch(`/api/global?sortBy=${encodeURIComponent(sortBy)}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch global data');
-      }
-
-      const { data: combined } = await response.json();
-      
-      // Debug logging
-      const user344 = combined?.find((item: any) => item.user.eir_position === 344);
-      if (user344) {
-        console.log('🔍 User 344 data:', {
-          position: user344.user.eir_position,
-          preferencesCount: user344.preferences?.length,
-          preferences: user344.preferences
-        });
-      }
-      
-      setData(combined || []);
-    } catch (err) {
-      console.error('Error loading global data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [sortBy]);
-
+  // Load data effect
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    const loadData = async () => {
+      try {
+        setLoading(true);
 
-  // Reset to first page when items per page changes
+        const response = await fetch(
+          `/api/global?sortBy=${encodeURIComponent(sortBy)}&page=${currentPage}&limit=${itemsPerPage}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch global data');
+        }
+
+        const { data: combined, totalUsers: total } = await response.json();
+        setTotalUsers(total || 0);
+        
+        // Debug logging
+        const user344 = combined?.find((item: any) => item.user.eir_position === 344);
+        if (user344) {
+          console.log('🔍 User 344 data:', {
+            position: user344.user.eir_position,
+            preferencesCount: user344.preferences?.length,
+            preferences: user344.preferences
+          });
+        }
+        
+        setData(combined || []);
+      } catch (err) {
+        console.error('Error loading global data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [sortBy, currentPage, itemsPerPage]);
+
+  // Reset to first page when items per page or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [itemsPerPage]);
+  }, [itemsPerPage, sortBy]);
 
   // Helper function to get visible preferences count for a user (default: 3)
   const getVisiblePrefsCount = (userId: string) => {
@@ -70,11 +75,11 @@ export default function GlobalTable() {
     }));
   };
 
-  // Calculate pagination
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  // Calculate pagination based on total users count
+  const totalPages = Math.ceil((totalUsers || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedData = data.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + itemsPerPage, totalUsers || 0);
+  const paginatedData = data; // Data is already paginated from API
 
   if (loading) {
     return (
@@ -116,26 +121,21 @@ export default function GlobalTable() {
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
               className="px-3 py-1.5 border-2 border-nursing-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-nursing-500 flex-1 sm:flex-none"
             >
-              <option value={25}>25</option>
               <option value={50}>50</option>
-              <option value={75}>75</option>
               <option value={100}>100</option>
-              <option value={150}>150</option>
               <option value={200}>200</option>
-              <option value={250}>250</option>
               <option value={300}>300</option>
               <option value={500}>500</option>
-              <option value={1000}>1000</option>
             </select>
           </div>
         </div>
       </div>
 
       <p className="text-sm text-gray-600 mb-4">
-        Total de usuarios registrados: <span className="font-bold">{data.length}</span>
+        Total de usuarios registrados: <span className="font-bold">{totalUsers ?? '...'}</span>
         {totalPages > 1 && (
           <span className="ml-3">
-            (Mostrando {startIndex + 1}-{Math.min(endIndex, data.length)})
+            (Mostrando {startIndex + 1}-{endIndex})
           </span>
         )}
       </p>

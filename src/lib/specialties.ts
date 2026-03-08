@@ -49,9 +49,9 @@ export const SPECIALTIES: SpecialtyInfo[] = [
   {
     name: 'ENFERMERÍA GERIÁTRICA',
     shortName: 'Geriátrica',
-    color: 'text-purple-700',
-    bgColor: 'bg-purple-100',
-    borderColor: 'border-purple-300'
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
+    borderColor: 'border-blue-300'
   },
   {
     name: 'ENFERMERÍA DEL TRABAJO',

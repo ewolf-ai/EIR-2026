@@ -5,6 +5,14 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    // Specialty colors - text
+    'text-green-700', 'text-pink-700', 'text-sky-700', 'text-yellow-700', 'text-orange-700', 'text-blue-700',
+    // Specialty colors - background
+    'bg-green-100', 'bg-pink-100', 'bg-sky-100', 'bg-yellow-100', 'bg-orange-100', 'bg-blue-100',
+    // Specialty colors - border
+    'border-green-300', 'border-pink-300', 'border-sky-300', 'border-yellow-300', 'border-orange-300', 'border-blue-300',
+  ],
   theme: {
     extend: {
       colors: {

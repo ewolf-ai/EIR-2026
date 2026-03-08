@@ -6,8 +6,20 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const sortBy = searchParams.get('sortBy') || 'position';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Get all users with positions and their preferences in one query
+    // Calculate range for pagination
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    // Get total users count (same query as comparison API)
+    const { count: totalUsers } = await supabaseAdmin
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .not('eir_position', 'is', null);
+
+    // Get paginated users with positions and their preferences
     const { data: users, error: usersError } = await supabaseAdmin
       .from('users')
       .select(`
@@ -24,7 +36,8 @@ export async function GET(request: NextRequest) {
         )
       `)
       .not('eir_position', 'is', null)
-      .order(sortBy === 'position' ? 'eir_position' : 'display_name', { ascending: true });
+      .order(sortBy === 'position' ? 'eir_position' : 'display_name', { ascending: true })
+      .range(from, to);
 
     if (usersError) throw usersError;
 
@@ -43,7 +56,7 @@ export async function GET(request: NextRequest) {
       preferences: (user.preferences || []).sort((a: any, b: any) => a.priority - b.priority)
     })) || [];
 
-    return NextResponse.json({ data: combined });
+    return NextResponse.json({ data: combined, totalUsers: totalUsers || 0 });
   } catch (error: any) {
     console.error('Error fetching global data:', error);
     return NextResponse.json(
