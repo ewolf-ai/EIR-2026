@@ -50,6 +50,28 @@ export default function RootLayout({
             __html: `(function(s){s.dataset.zone='10691683',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
           }}
         />
+
+        {/* Ko-fi Floating Widget */}
+        <Script 
+          src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js" 
+          strategy="afterInteractive"
+        />
+        <Script 
+          id="kofi-widget"
+          strategy="lazyOnload"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof kofiWidgetOverlay !== 'undefined') {
+                kofiWidgetOverlay.draw('e_wolf', {
+                  'type': 'floating-chat',
+                  'floating-chat.donateButton.text': 'Apoyo',
+                  'floating-chat.donateButton.background-color': '#00b9fe',
+                  'floating-chat.donateButton.text-color': '#fff'
+                });
+              }
+            `
+          }}
+        />
       </body>
     </html>
   );

@@ -30,6 +30,17 @@ export default function Header() {
 
           <div className="flex items-center gap-2 sm:gap-4">
             <a
+              href="https://ko-fi.com/e_wolf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#00b9fe] to-[#0099d6] hover:from-[#0099d6] hover:to-[#0085be] rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-1.5 sm:gap-2"
+            >
+              <span className="text-base sm:text-lg">❤️</span>
+              <span className="hidden sm:inline">Apóyanos</span>
+              <span className="sm:hidden">Donar</span>
+            </a>
+            
+            <a
               href="https://ewolf-web.vercel.app/#team"
               target="_blank"
               rel="noopener noreferrer"
