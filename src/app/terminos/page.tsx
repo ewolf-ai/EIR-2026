@@ -37,7 +37,7 @@ export default function TermsConditions() {
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Objeto y Ámbito de Aplicación</h2>
             <p className="text-gray-700 mb-4">
-              Los presentes términos y condiciones regulan el acceso y uso de la plataforma web EIR 2026 (en adelante, "la Plataforma"), 
+              Los presentes términos y condiciones regulan el acceso y uso de la plataforma web EIR 2026 (en adelante, &quot;la Plataforma&quot;), 
               desarrollada por ewolf, que tiene como finalidad proporcionar información y herramientas de gestión para la selección 
               de plazas del examen de Enfermero Interno Residente (EIR) 2026.
             </p>
@@ -166,7 +166,7 @@ export default function TermsConditions() {
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li>
-                La Plataforma se proporciona "tal cual" y "según disponibilidad", sin garantías de ningún tipo, 
+                La Plataforma se proporciona &quot;tal cual&quot; y &quot;según disponibilidad&quot;, sin garantías de ningún tipo, 
                 expresas o implícitas
               </li>
               <li>

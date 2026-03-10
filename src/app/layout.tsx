@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
@@ -11,6 +11,7 @@ import { Analytics } from '@vercel/analytics/next';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://eir-2026.vercel.app'),
   title: {
     default: 'EIR 2026 - Gestión de Plazas',
     template: '%s | EIR 2026',
@@ -22,15 +23,6 @@ export const metadata: Metadata = {
   publisher: 'ewolf',
   applicationName: 'EIR 2026 - Gestión de Plazas',
   manifest: '/manifest.json',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-  },
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#e0559c' },
-    { media: '(prefers-color-scheme: dark)', color: '#e0559c' },
-  ],
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -73,6 +65,16 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#e0559c' },
+    { media: '(prefers-color-scheme: dark)', color: '#e0559c' },
+  ],
 };
 
 export default function RootLayout({

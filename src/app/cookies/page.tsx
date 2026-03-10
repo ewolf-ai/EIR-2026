@@ -252,7 +252,7 @@ export default function CookiePolicy() {
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <p className="text-sm text-blue-800 mb-3">
-                Para cambiar sus preferencias, haga clic en el botón "Configurar cookies" en el footer de cualquier página.
+                Para cambiar sus preferencias, haga clic en el botón &quot;Configurar cookies&quot; en el footer de cualquier página.
               </p>
               <CookieSettingsButton />
             </div>
