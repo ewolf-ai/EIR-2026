@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <defs>
+    <linearGradient id="appleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e0559c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c94a87;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo con bordes redondeados para iOS -->
+  <rect width="180" height="180" rx="40" fill="url(#appleGrad)"/>
+  
+  <!-- Cruz médica blanca más grande -->
+  <rect x="75" y="40" width="30" height="100" fill="white" rx="4"/>
+  <rect x="40" y="75" width="100" height="30" fill="white" rx="4"/>
+  
+  <!-- Centro decorativo -->
+  <circle cx="90" cy="90" r="15" fill="#f8d7da" opacity="0.8"/>
+  
+  <!-- Sombra interna sutil -->
+  <rect width="180" height="180" rx="40" fill="none" stroke="white" stroke-width="2" opacity="0.2"/>
+</svg>
