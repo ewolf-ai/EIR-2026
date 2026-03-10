@@ -3,6 +3,9 @@ import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 import AuthProvider from '@/components/AuthProvider';
+import Footer from '@/components/Footer';
+import CookieConsent from '@/components/CookieConsent';
+import ConditionalScripts from '@/components/ConditionalScripts';
 import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -29,29 +32,12 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <AuthProvider>{children}</AuthProvider>
+        <Footer />
         
-        {/* Scripts moved after body to prevent hydration errors */}
-        <Script 
-          src="https://5gvci.com/act/files/tag.min.js?z=10691679" 
-          data-cfasync="false" 
-          strategy="afterInteractive"
-        />
-        <Script 
-          id="vignette-script"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='10691682',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
-          }}
-        />
-        <Script 
-          id="tag-script"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='10691683',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
-          }}
-        />
-
-        {/* Ko-fi Floating Widget */}
+        {/* Conditional ad scripts - only loaded with marketing consent */}
+        <ConditionalScripts />
+        
+        {/* Ko-fi Floating Widget - Always loads (donation/support widget) */}
         <Script 
           src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js" 
           strategy="afterInteractive"
@@ -72,6 +58,9 @@ export default function RootLayout({
             `
           }}
         />
+        
+        {/* Cookie Consent Banner */}
+        <CookieConsent />
       </body>
     </html>
   );

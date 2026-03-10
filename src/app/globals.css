@@ -26,6 +26,8 @@ body {
   @apply bg-gradient-to-br from-pastel-blue via-pastel-mint to-pastel-lavender;
   min-height: 100vh;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Nursing themed background decorations */
@@ -80,6 +82,22 @@ body::before {
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Slide up animation for cookie banner */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out;
 }
 
 /* Button hover effects */
