@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e0559c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c94a87;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo circular -->
+  <circle cx="50" cy="50" r="48" fill="url(#grad1)"/>
+  
+  <!-- Cruz médica blanca -->
+  <rect x="42" y="25" width="16" height="50" fill="white" rx="2"/>
+  <rect x="25" y="42" width="50" height="16" fill="white" rx="2"/>
+  
+  <!-- Detalles adicionales en rosa claro -->
+  <circle cx="50" cy="50" r="8" fill="#f8d7da" opacity="0.8"/>
+  
+  <!-- Borde exterior sutil -->
+  <circle cx="50" cy="50" r="48" fill="none" stroke="white" stroke-width="1" opacity="0.3"/>
+</svg>

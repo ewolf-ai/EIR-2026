@@ -3,17 +3,76 @@ import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 import AuthProvider from '@/components/AuthProvider';
+import Footer from '@/components/Footer';
+import CookieConsent from '@/components/CookieConsent';
+import ConditionalScripts from '@/components/ConditionalScripts';
 import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'EIR 2026 - Gestión de Plazas',
-  description: 'Aplicación web para gestionar las plazas ofertadas del EIR 2026',
-  keywords: ['EIR', '2026', 'enfermería', 'residencia', 'plazas'],
-  authors: [{ name: 'EIR Team' }],
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#e0559c',
+  title: {
+    default: 'EIR 2026 - Gestión de Plazas',
+    template: '%s | EIR 2026',
+  },
+  description: 'Aplicación web para gestionar las plazas ofertadas del EIR 2026. Organiza tus preferencias y compara tu posición con otros aspirantes a las plazas EIR 2026.',
+  keywords: ['EIR', '2026', 'enfermería', 'residencia', 'plazas', 'EIR 2026', 'Enfermero Interno Residente', 'hospital', 'especialidad'],
+  authors: [{ name: 'ewolf' }],
+  creator: 'ewolf',
+  publisher: 'ewolf',
+  applicationName: 'EIR 2026 - Gestión de Plazas',
+  manifest: '/manifest.json',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+  },
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#e0559c' },
+    { media: '(prefers-color-scheme: dark)', color: '#e0559c' },
+  ],
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-icon.svg', type: 'image/svg+xml' },
+    ],
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_ES',
+    url: 'https://eir-2026.vercel.app',
+    siteName: 'EIR 2026 - Gestión de Plazas',
+    title: 'EIR 2026 - Gestión de Plazas',
+    description: 'Organiza tus preferencias y compara tu posición con otros aspirantes a las plazas EIR 2026',
+    images: [
+      {
+        url: '/favicon.svg',
+        width: 100,
+        height: 100,
+        alt: 'EIR 2026 Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'EIR 2026 - Gestión de Plazas',
+    description: 'Organiza tus preferencias y compara tu posición con otros aspirantes a las plazas EIR 2026',
+    images: ['/favicon.svg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({
@@ -29,29 +88,12 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <AuthProvider>{children}</AuthProvider>
+        <Footer />
         
-        {/* Scripts moved after body to prevent hydration errors */}
-        <Script 
-          src="https://5gvci.com/act/files/tag.min.js?z=10691679" 
-          data-cfasync="false" 
-          strategy="afterInteractive"
-        />
-        <Script 
-          id="vignette-script"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='10691682',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
-          }}
-        />
-        <Script 
-          id="tag-script"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='10691683',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
-          }}
-        />
-
-        {/* Ko-fi Floating Widget */}
+        {/* Conditional ad scripts - only loaded with marketing consent */}
+        <ConditionalScripts />
+        
+        {/* Ko-fi Floating Widget - Always loads (donation/support widget) */}
         <Script 
           src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js" 
           strategy="afterInteractive"
@@ -72,6 +114,9 @@ export default function RootLayout({
             `
           }}
         />
+        
+        {/* Cookie Consent Banner */}
+        <CookieConsent />
       </body>
     </html>
   );

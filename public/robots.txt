@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Legal pages
+Allow: /privacidad
+Allow: /terminos
+Allow: /cookies
+
+# Sitemap
+Sitemap: https://eir-2026.vercel.app/sitemap.xml

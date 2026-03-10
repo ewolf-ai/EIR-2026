@@ -1,0 +1,22 @@
+{
+  "name": "EIR 2026 - Gestión de Plazas",
+  "short_name": "EIR 2026",
+  "description": "Aplicación web para gestionar las plazas ofertadas del EIR 2026. Organiza tus preferencias y compara tu posición.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#B4D4E1",
+  "theme_color": "#e0559c",
+  "orientation": "portrait-primary",
+  "lang": "es",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "health", "medical", "utilities"],
+  "screenshots": []
+}
