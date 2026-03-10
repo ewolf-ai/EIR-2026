@@ -87,6 +87,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="monetag" content="774ad1aa30513e6183591da0c343f1e9" />
+        <meta name="google-site-verification" content="ZRV7DfSvR8tAkEx2jNAwoce0SP3vQgkVUVQ0GxnWePU" />
       </head>
       <body className={inter.className}>
         <AuthProvider>{children}</AuthProvider>
