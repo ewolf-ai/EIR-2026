@@ -4,6 +4,7 @@ import Header from './Header';
 import UserPanel from './UserPanel';
 import PreferencesManager from './PreferencesManager';
 import GlobalTable from './GlobalTable';
+import SalaryCalculator from './SalaryCalculator';
 
 export default function Dashboard() {
   return (
@@ -113,6 +114,9 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Salary Calculator */}
+        <SalaryCalculator />
 
         {/* Global Table */}
         <GlobalTable />
