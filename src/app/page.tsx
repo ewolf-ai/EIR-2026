@@ -116,6 +116,14 @@ export default function Home() {
                 <p className="text-xs text-gray-600">Un DNI por cuenta, garantizando transparencia</p>
               </div>
             </div>
+
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">💶</span>
+              <div>
+                <h4 className="font-semibold text-gray-800 text-sm">Calculadora de salario</h4>
+                <p className="text-xs text-gray-600">Conoce tu salario neto como EIR</p>
+              </div>
+            </div>
           </div>
 
           {/* Decorative elements */}
