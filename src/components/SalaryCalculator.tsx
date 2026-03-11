@@ -2,11 +2,11 @@
 
 export default function SalaryCalculator() {
   return (
-    <div className="bg-gradient-to-br from-pastel-peach via-nursing-50 to-pastel-lavender rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-nursing-200 mb-6 sm:mb-8">
+    <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-emerald-200 mb-6 sm:mb-8">
       <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
         {/* Icon Section */}
         <div className="flex-shrink-0">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-nursing-400 to-nursing-600 rounded-full flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center shadow-lg">
             <span className="text-3xl sm:text-4xl">💶</span>
           </div>
         </div>
@@ -14,7 +14,7 @@ export default function SalaryCalculator() {
         {/* Content Section */}
         <div className="flex-1 text-center sm:text-left">
           <h3 className="text-xl sm:text-2xl font-bold text-nursing-800 mb-2 flex items-center justify-center sm:justify-start gap-2">
-            <span>Calculadora de Salario Neto</span>
+            <span>Calcula tu salario de Residente</span>
           </h3>
           <p className="text-sm sm:text-base text-gray-700 mb-4">
             Descubre cuál será tu salario neto como enfermero/a residente. 
@@ -42,7 +42,7 @@ export default function SalaryCalculator() {
       </div>
 
       {/* Additional Info */}
-      <div className="mt-4 pt-4 border-t border-nursing-300">
+      <div className="mt-4 pt-4 border-t border-teal-300">
         <div className="flex flex-wrap gap-3 justify-center sm:justify-start text-xs sm:text-sm text-gray-600">
           <div className="flex items-center gap-1">
             <span>✓</span>
