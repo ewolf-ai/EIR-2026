@@ -13,30 +13,6 @@ interface PreferenceAnalysis {
   usersInProvince: number;
 }
 
-interface UserWithPreferences {
-  id: string;
-  eir_position: number;
-  preferences: Array<{
-    preference_value: string;
-    preference_type: string;
-    specialty: string;
-    priority: number;
-  }>;
-}
-
-// Helper function to get province from preference
-function getProvinceFromPreference(preference: string, type: string): string | null {
-  if (type === 'province') {
-    return preference;
-  }
-  if (type === 'community') {
-    // For community, return null as we'll match all provinces in that community
-    return null;
-  }
-  // For hospital, we need to extract from offered_positions
-  return null;
-}
-
 // GET - Get comparison statistics for a user
 export async function GET(request: NextRequest) {
   try {
@@ -101,47 +77,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get all users with their positions and their preferences in one query using JOIN
-    // This is much more efficient than separate queries
-    const { data: usersWithPreferences, error: usersError } = await supabaseAdmin
-      .from('users')
-      .select(`
-        id, 
-        eir_position,
-        preferences (
-          user_id,
-          preference_value,
-          preference_type,
-          specialty,
-          priority
-        )
-      `)
-      .not('eir_position', 'is', null)
-      .lt('eir_position', userPosition) // Only users ahead
-      .order('eir_position');
-
-    // Extract users and build preference map
-    const allUsers = usersWithPreferences?.map((u: any) => ({
-      id: u.id,
-      eir_position: u.eir_position
-    })) || [];
-
-    // Build all preferences array from the nested data
-    const allPreferences: any[] = [];
-    if (usersWithPreferences) {
-      for (const user of usersWithPreferences) {
-        if (user.preferences && Array.isArray(user.preferences)) {
-          allPreferences.push(...user.preferences);
-        }
-      }
-    }
-
-    // Get all offered positions for statistics
+    // Get all offered positions for statistics (needed for position counts and province mapping)
     const { data: offeredPositions } = await supabaseAdmin
       .from('offered_positions')
       .select('center, province, specialty, num_positions');
 
-    // Build hospital->province mapping
+    // Build hospital->province mapping for later use
     const hospitalProvinceMap = new Map<string, string>();
     const positionCountMap = new Map<string, number>(); // key: center_specialty
     if (offeredPositions) {
@@ -150,27 +91,6 @@ export async function GET(request: NextRequest) {
         const key = `${pos.center}_${pos.specialty}`;
         positionCountMap.set(key, (positionCountMap.get(key) || 0) + pos.num_positions);
       }
-    }
-
-    // Build user-preference mapping
-    const userPreferenceMap = new Map<string, UserWithPreferences['preferences']>();
-    if (allPreferences) {
-      for (const pref of allPreferences) {
-        if (!userPreferenceMap.has(pref.user_id)) {
-          userPreferenceMap.set(pref.user_id, []);
-        }
-        userPreferenceMap.get(pref.user_id)!.push({
-          preference_value: pref.preference_value,
-          preference_type: pref.preference_type,
-          specialty: pref.specialty,
-          priority: pref.priority,
-        });
-      }
-      
-      // CRITICAL: Sort each user's preferences by priority to ensure "top 3" is accurate
-      userPreferenceMap.forEach((prefs, userId) => {
-        prefs.sort((a: any, b: any) => a.priority - b.priority);
-      });
     }
 
     // Analyze each user preference
@@ -190,8 +110,8 @@ export async function GET(request: NextRequest) {
         // Count positions for this province
         if (offeredPositions) {
           totalPositions = offeredPositions
-            .filter(p => p.province === userPref.preference_value && p.specialty === userPref.specialty)
-            .reduce((sum, p) => sum + p.num_positions, 0);
+            .filter((p: any) => p.province === userPref.preference_value && p.specialty === userPref.specialty)
+            .reduce((sum: number, p: any) => sum + p.num_positions, 0);
         }
         provinceForPreference = userPref.preference_value;
       } else if (userPref.preference_type === 'community') {
@@ -202,174 +122,77 @@ export async function GET(request: NextRequest) {
 
         if (offeredPositions) {
           totalPositions = offeredPositions
-            .filter(p => provincesInCommunity.includes(p.province) && p.specialty === userPref.specialty)
-            .reduce((sum, p) => sum + p.num_positions, 0);
+            .filter((p: any) => provincesInCommunity.includes(p.province) && p.specialty === userPref.specialty)
+            .reduce((sum: number, p: any) => sum + p.num_positions, 0);
         }
       }
 
-      // Count users ahead with this as first option
-      let usersFirstOption = 0;
-      if (allUsers) {
-        for (const user of allUsers) {
-          if (user.eir_position >= userPosition) break; // Only count users ahead
-          
-          const prefs = userPreferenceMap.get(user.id) || [];
-          if (prefs.length === 0) continue;
+      // Count users ahead with this as first option - DB query
+      const { data: firstChoiceCount, error: firstChoiceError } = await supabaseAdmin
+        .rpc('get_users_first_choice_count', {
+          target_preference: userPref.preference_value,
+          target_type: userPref.preference_type,
+          target_specialty: userPref.specialty,
+          max_position: userPosition
+        });
 
-          const firstPref = prefs[0];
-          let matches = false;
+      console.log('🔍 RPC first_choice:', {
+        preference: userPref.preference_value,
+        type: userPref.preference_type,
+        specialty: userPref.specialty,
+        maxPos: userPosition,
+        result: firstChoiceCount,
+        error: firstChoiceError
+      });
 
-          if (userPref.preference_type === 'hospital') {
-            // Match exact hospital
-            matches = firstPref.preference_value === userPref.preference_value && 
-                     firstPref.specialty === userPref.specialty;
-          } else if (userPref.preference_type === 'province') {
-            // Match province OR any hospital in that province
-            if (firstPref.preference_type === 'province') {
-              matches = firstPref.preference_value === userPref.preference_value && 
-                       firstPref.specialty === userPref.specialty;
-            } else if (firstPref.preference_type === 'hospital') {
-              const hospitalProvince = hospitalProvinceMap.get(firstPref.preference_value);
-              matches = hospitalProvince === userPref.preference_value && 
-                       firstPref.specialty === userPref.specialty;
-            }
-          } else if (userPref.preference_type === 'community') {
-            // Match community OR any province/hospital in that community
-            const provincesInCommunity = PROVINCE_TO_COMMUNITY
-              .filter(p => p.community === userPref.preference_value)
-              .map(p => p.province);
+      const usersFirstOption = firstChoiceError ? 0 : (firstChoiceCount || 0);
 
-            if (firstPref.preference_type === 'community') {
-              matches = firstPref.preference_value === userPref.preference_value && 
-                       firstPref.specialty === userPref.specialty;
-            } else if (firstPref.preference_type === 'province') {
-              matches = provincesInCommunity.includes(firstPref.preference_value) && 
-                       firstPref.specialty === userPref.specialty;
-            } else if (firstPref.preference_type === 'hospital') {
-              const hospitalProvince = hospitalProvinceMap.get(firstPref.preference_value);
-              matches = !!(hospitalProvince && provincesInCommunity.includes(hospitalProvince) && 
-                       firstPref.specialty === userPref.specialty);
-            }
-          }
+      // Count users ahead with this in top 3 - DB query
+      const { data: top3Count, error: top3Error } = await supabaseAdmin
+        .rpc('get_users_top3_count', {
+          target_preference: userPref.preference_value,
+          target_type: userPref.preference_type,
+          target_specialty: userPref.specialty,
+          max_position: userPosition
+        });
 
-          if (matches) usersFirstOption++;
-        }
-      }
+      const usersTop3 = top3Error ? 0 : (top3Count || 0);
 
-      // Count users ahead with this in top 3
-      let usersTop3 = 0;
-      if (allUsers) {
-        for (const user of allUsers) {
-          if (user.eir_position >= userPosition) break; // Only count users ahead
-          const prefs = userPreferenceMap.get(user.id) || [];
-          const top3 = prefs.slice(0, 3);
-
-          const hasMatch = top3.some(p => {
-            if (userPref.preference_type === 'hospital') {
-              // Match exact hospital
-              return p.preference_value === userPref.preference_value && 
-                     p.specialty === userPref.specialty;
-            } else if (userPref.preference_type === 'province') {
-              // Match province OR any hospital in that province
-              if (p.preference_type === 'province') {
-                return p.preference_value === userPref.preference_value && 
-                       p.specialty === userPref.specialty;
-              } else if (p.preference_type === 'hospital') {
-                const hospitalProvince = hospitalProvinceMap.get(p.preference_value);
-                return hospitalProvince === userPref.preference_value && 
-                       p.specialty === userPref.specialty;
-              }
-            } else if (userPref.preference_type === 'community') {
-              // Match community OR any province/hospital in that community
-              const provincesInCommunity = PROVINCE_TO_COMMUNITY
-                .filter(pc => pc.community === userPref.preference_value)
-                .map(pc => pc.province);
-
-              if (p.preference_type === 'community') {
-                return p.preference_value === userPref.preference_value && 
-                       p.specialty === userPref.specialty;
-              } else if (p.preference_type === 'province') {
-                return provincesInCommunity.includes(p.preference_value) && 
-                       p.specialty === userPref.specialty;
-              } else if (p.preference_type === 'hospital') {
-                const hospitalProvince = hospitalProvinceMap.get(p.preference_value);
-                return hospitalProvince && provincesInCommunity.includes(hospitalProvince) && 
-                       p.specialty === userPref.specialty;
-              }
-            }
-            return false;
-          });
-
-          if (hasMatch) usersTop3++;
-        }
-      }
-
-      // Count users competing for same province using SQL query
+      // Count users competing for same province/community - DB query
       let usersInProvince = 0;
       
       if (userPref.preference_type === 'hospital' && provinceForPreference) {
-        // For hospital: Get users competing for same province where hospital is located
-        const { data: competingUsers, error } = await supabaseAdmin
-          .rpc('get_users_competing_for_province', {
+        // For hospital: Get count of users competing for same province
+        const { data: provinceCount, error } = await supabaseAdmin
+          .rpc('get_users_same_province_count', {
             target_province: provinceForPreference,
-            target_specialty: userPref.specialty
+            target_specialty: userPref.specialty,
+            max_position: userPosition
           });
 
-        if (competingUsers && !error) {
-          const competingUserIds = new Set(competingUsers.map((u: any) => u.user_id));
-          // Filter only users ahead
-          if (allUsers) {
-            usersInProvince = allUsers.filter(u => 
-              u.eir_position < userPosition && competingUserIds.has(u.id)
-            ).length;
-          }
-        }
+        usersInProvince = error ? 0 : (provinceCount || 0);
         
       } else if (userPref.preference_type === 'province') {
-        // For province: Get users competing for this province
-        const { data: competingUsers, error } = await supabaseAdmin
-          .rpc('get_users_competing_for_province', {
+        // For province: Get count of users competing for this province
+        const { data: provinceCount, error } = await supabaseAdmin
+          .rpc('get_users_same_province_count', {
             target_province: userPref.preference_value,
-            target_specialty: userPref.specialty
+            target_specialty: userPref.specialty,
+            max_position: userPosition
           });
 
-        if (competingUsers && !error) {
-          const competingUserIds = new Set(competingUsers.map((u: any) => u.user_id));
-          // Filter only users ahead
-          if (allUsers) {
-            usersInProvince = allUsers.filter(u => 
-              u.eir_position < userPosition && competingUserIds.has(u.id)
-            ).length;
-          }
-        }
+        usersInProvince = error ? 0 : (provinceCount || 0);
         
       } else if (userPref.preference_type === 'community') {
-        // For community: Get users competing for any province in this community
-        const provincesInCommunity = PROVINCE_TO_COMMUNITY
-          .filter(p => p.community === userPref.preference_value)
-          .map(p => p.province);
+        // For community: Get count of users competing for this community
+        const { data: communityCount, error } = await supabaseAdmin
+          .rpc('get_users_same_community_count', {
+            target_community: userPref.preference_value,
+            target_specialty: userPref.specialty,
+            max_position: userPosition
+          });
 
-        // Call RPC for each province and combine results
-        const allCompetingUserIds = new Set<string>();
-        
-        for (const province of provincesInCommunity) {
-          const { data: competingUsers, error } = await supabaseAdmin
-            .rpc('get_users_competing_for_province', {
-              target_province: province,
-              target_specialty: userPref.specialty
-            });
-
-          if (competingUsers && !error) {
-            competingUsers.forEach((u: any) => allCompetingUserIds.add(u.user_id));
-          }
-        }
-
-        // Filter only users ahead
-        if (allUsers) {
-          usersInProvince = allUsers.filter(u => 
-            u.eir_position < userPosition && allCompetingUserIds.has(u.id)
-          ).length;
-        }
+        usersInProvince = error ? 0 : (communityCount || 0);
       }
 
       preferenceAnalysis.push({
